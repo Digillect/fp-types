@@ -8,9 +8,23 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution items", "Solution 
 		.github\workflows\ci.yml = .github\workflows\ci.yml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Digillect.FP.Types", "src\Digillect.FP.Types\Digillect.FP.Types.csproj", "{2C151508-0B73-4FD7-B778-32FDC3CBC984}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Digillect.FP.Types.Tests", "test\Digillect.FP.Types.Tests\Digillect.FP.Types.Tests.csproj", "{B0BB97C0-1F1B-4173-837A-C62B5C444326}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2C151508-0B73-4FD7-B778-32FDC3CBC984}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C151508-0B73-4FD7-B778-32FDC3CBC984}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C151508-0B73-4FD7-B778-32FDC3CBC984}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C151508-0B73-4FD7-B778-32FDC3CBC984}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B0BB97C0-1F1B-4173-837A-C62B5C444326}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B0BB97C0-1F1B-4173-837A-C62B5C444326}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B0BB97C0-1F1B-4173-837A-C62B5C444326}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B0BB97C0-1F1B-4173-837A-C62B5C444326}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
