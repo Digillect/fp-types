@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace Digillect.FP.Types;
+﻿namespace Digillect.FP.Types;
 
 /// <summary>
 /// Provides extension methods for the <see cref="Result{T}"/> type that allow for asynchronous operations
@@ -9,604 +7,646 @@ namespace Digillect.FP.Types;
 public static class ResultExtensions
 {
 	/// <summary>
-	/// Applies a synchronous transformation function to the value of a successful <see cref="Result{T}"/>
-	/// wrapped in a <see cref="Task{TResult}"/>, returning a new <see cref="Result{T}"/> with the transformed value,
-	/// also wrapped in a <see cref="Task{TResult}"/>.
+	/// Transforms the success value of the current asynchronous <see cref="Result{T}"/> instance using the specified
+	/// mapping function <paramref name="map"/>.
 	/// </summary>
-	/// <typeparam name="T">The type of the value held by the input <see cref="Result{T}"/>.</typeparam>
-	/// <typeparam name="TResult">The type of the value to be produced by the transformation function.</typeparam>
-	/// <param name="result">The asynchronous task representing the <see cref="Result{T}"/> to transform.</param>
-	/// <param name="next">The synchronous transformation function to apply to the value of the successful result.</param>
+	/// <typeparam name="T">The type of the success result in the original <see cref="Result{T}"/>.</typeparam>
+	/// <typeparam name="TResult">The type of the success result in the resultant <see cref="Result{TResult}"/>.</typeparam>
+	/// <param name="result">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
+	/// <param name="map">The mapping function to apply to the success value.</param>
 	/// <returns>
-	/// A <see cref="Task{TResult}"/> containing a <see cref="Result{TResult}"/> with the transformed value
-	/// if the original result was successful, or the original error if the result was unsuccessful.
+	/// A <see cref="Task{T}"/> that, when awaited, evaluates to a new <see cref="Result{TResult}"/> containing
+	/// the mapped value if the original result is successful; otherwise, the original error is returned.
 	/// </returns>
-	public static async Task<Result<TResult>> Then<T, TResult>(this Task<Result<T>> result, Func<T, TResult> next)
+	public static async Task<Result<TResult>> Map<T, TResult>(this Task<Result<T>> result, Func<T, TResult> map)
 	{
 		var awaitedResult = await result.ConfigureAwait(false);
 
-		return awaitedResult.Then(next);
+		return awaitedResult.Map(map);
 	}
 
 	/// <summary>
-	/// Applies an asynchronous transformation function to the value of a successful <see cref="Result{T}"/>
-	/// wrapped in a <see cref="Task{TResult}"/>, returning a new <see cref="Result{T}"/> with the transformed value,
-	/// also wrapped in a <see cref="Task{TResult}"/>.
+	/// Transforms the success value of the current asynchronous <see cref="Result{T}"/> instance using the specified
+	/// asynchronous mapping function <paramref name="map"/>.
 	/// </summary>
-	/// <typeparam name="T">The type of the value held by the input <see cref="Result{T}"/>.</typeparam>
-	/// <typeparam name="TResult">The type of the value to be produced by the asynchronous transformation function.</typeparam>
-	/// <param name="result">The asynchronous task representing the <see cref="Result{T}"/> to transform.</param>
-	/// <param name="next">The asynchronous transformation function to apply to the value of the successful result.</param>
+	/// <typeparam name="T">The type of the success result in the original <see cref="Result{T}"/>.</typeparam>
+	/// <typeparam name="TResult">The type of the success result in the resultant <see cref="Result{TResult}"/>.</typeparam>
+	/// <param name="result">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
+	/// <param name="map">The asynchronous mapping function to apply to the success value.</param>
 	/// <returns>
-	/// A <see cref="Task{TResult}"/> containing a <see cref="Result{TResult}"/> with the transformed value
-	/// if the original result was successful, or the original error if the result was unsuccessful.
+	/// A <see cref="Task{T}"/> that, when awaited, evaluates to a new <see cref="Result{TResult}"/> containing
+	/// the mapped value if the original result is successful; otherwise, the original error is returned.
 	/// </returns>
-	public static async Task<Result<TResult>> ThenAsync<T, TResult>(this Task<Result<T>> result, Func<T, Task<TResult>> next)
+	public static async Task<Result<TResult>> MapAsync<T, TResult>(this Task<Result<T>> result, Func<T, Task<TResult>> map)
 	{
 		var awaitedResult = await result.ConfigureAwait(false);
 
-		return await awaitedResult.ThenAsync(next).ConfigureAwait(false);
+		return await awaitedResult.MapAsync(map).ConfigureAwait(false);
 	}
 
 	/// <summary>
-	/// Applies an asynchronous transformation function that returns a <see cref="Result{T}"/> to the value
-	/// of a successful <see cref="Result{T}"/> wrapped in a <see cref="Task{TResult}"/>, resulting in a new
-	/// <see cref="Result{T}"/> with the transformed value, also wrapped in a <see cref="Task{TResult}"/>.
+	/// Chains the current asynchronous <see cref="Result{T}"/> instance to another <see cref="Result{TResult}"/> using
+	/// the specified binding function <paramref name="bind"/>.
 	/// </summary>
-	/// <typeparam name="T">The type of the value held by the input <see cref="Result{T}"/>.</typeparam>
-	/// <typeparam name="TResult">The type of the value to be produced by the transformation function.</typeparam>
-	/// <param name="result">The asynchronous task representing the <see cref="Result{T}"/> to transform.</param>
-	/// <param name="next">
-	/// The asynchronous transformation function that takes the value of the successful result
-	/// and produces a new <see cref="Result{T}"/>.
-	/// </param>
+	/// <typeparam name="T">The type of the success result in the original <see cref="Result{T}"/>.</typeparam>
+	/// <typeparam name="TResult">The type of the success result in the resultant <see cref="Result{TResult}"/>.</typeparam>
+	/// <param name="result">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
+	/// <param name="bind">The binding function that returns a new <see cref="Result{TResult}"/> based on the success value.</param>
 	/// <returns>
-	/// A <see cref="Task{TResult}"/> containing a <see cref="Result{TResult}"/> with the transformed value
-	/// if the original result was successful, or the original error if the result was unsuccessful.
+	/// A <see cref="Task{T}"/> that, when awaited, evaluates to a new <see cref="Result{TResult}"/>. If the original result
+	/// is a success, the binding function is applied to generate a new result. If the original result is a failure, the original error is returned.
 	/// </returns>
-	public static async Task<Result<TResult>> ThenAsync<T, TResult>(this Task<Result<T>> result, Func<T, Result<TResult>> next)
+	public static async Task<Result<TResult>> Bind<T, TResult>(this Task<Result<T>> result, Func<T, Result<TResult>> bind)
 	{
 		var awaitedResult = await result.ConfigureAwait(false);
 
-		return awaitedResult.Then(next);
+		return awaitedResult.Bind(bind);
 	}
 
 	/// <summary>
-	/// Applies an asynchronous transformation function to the value of a successful <see cref="Result{T}"/>
-	/// wrapped in a <see cref="Task{TResult}"/>, returning a new <see cref="Result{T}"/> with the transformed value,
-	/// also wrapped in a <see cref="Task{TResult}"/>.
+	/// Chains the current asynchronous <see cref="Result{T}"/> instance to another asynchronous <see cref="Result{TResult}"/> using
+	/// the specified asynchronous binding function <paramref name="bind"/>.
 	/// </summary>
-	/// <typeparam name="T">The type of the value held by the input <see cref="Result{T}"/>.</typeparam>
-	/// <typeparam name="TResult">The type of the value to be produced by the asynchronous transformation function.</typeparam>
-	/// <param name="result">The asynchronous task representing the <see cref="Result{T}"/> to transform.</param>
-	/// <param name="next">The asynchronous transformation function to apply to the value of the successful result.</param>
+	/// <typeparam name="T">The type of the success result in the original <see cref="Result{T}"/>.</typeparam>
+	/// <typeparam name="TResult">The type of the success result in the resultant <see cref="Result{TResult}"/>.</typeparam>
+	/// <param name="result">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
+	/// <param name="bind">The asynchronous binding function that returns a new <see cref="Result{TResult}"/> based on the success value.</param>
 	/// <returns>
-	/// A <see cref="Task{TResult}"/> containing a <see cref="Result{TResult}"/> with the transformed value
-	/// if the original result was successful, or the original error if the result was unsuccessful.
+	/// A <see cref="Task{T}"/> that, when awaited, evaluates to a new <see cref="Result{TResult}"/>. If the original result
+	/// is a success, the asynchronous binding function is applied to generate a new result. If the original result is a failure, the original error is returned.
 	/// </returns>
-	public static async Task<Result<TResult>> ThenAsync<T, TResult>(this Task<Result<T>> result, Func<T, Task<Result<TResult>>> next)
+	public static async Task<Result<TResult>> BindAsync<T, TResult>(this Task<Result<T>> result, Func<T, Task<Result<TResult>>> bind)
 	{
 		var awaitedResult = await result.ConfigureAwait(false);
 
-		return await awaitedResult.ThenAsync(next).ConfigureAwait(false);
+		return await awaitedResult.BindAsync(bind).ConfigureAwait(false);
 	}
 
 	/// <summary>
-	/// Executes the specified action on the value of a successful <see cref="Result{T}"/>
-	/// wrapped in a <see cref="Task{TResult}"/>, returning the original <see cref="Result{T}"/>
-	/// wrapped in a <see cref="Task{TResult}"/>.
+	/// Executes a side effect when the current asynchronous <see cref="Result{T}"/> instance contains a success value.
+	/// Does not modify the result.
 	/// </summary>
-	/// <typeparam name="T">The type of the value held by the <see cref="Result{T}"/>.</typeparam>
-	/// <param name="result">The asynchronous task representing the <see cref="Result{T}"/> to process.</param>
-	/// <param name="action">The action to execute on the value of the successful result.</param>
+	/// <typeparam name="T">The type of the success result in the current <see cref="Result{T}"/>.</typeparam>
+	/// <param name="result">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
+	/// <param name="action">The action to execute if the <see cref="Result{T}"/> contains a success value.</param>
 	/// <returns>
-	/// A <see cref="Task{TResult}"/> containing the original <see cref="Result{T}"/> after executing the action,
-	/// if the result was successful. If the result is unsuccessful, it is returned unchanged.
+	/// A <see cref="Task{T}"/> that, when awaited, evaluates to the original <see cref="Result{T}"/> instance, unchanged.
 	/// </returns>
-	public static async Task<Result<T>> Do<T>(this Task<Result<T>> result, Action<T> action)
+	public static async Task<Result<T>> Tap<T>(this Task<Result<T>> result, Action<T> action)
 	{
 		var awaitedResult = await result.ConfigureAwait(false);
 
-		awaitedResult.Do(action);
+		awaitedResult.Tap(action);
 
 		return awaitedResult;
 	}
 
 	/// <summary>
-	/// Executes an asynchronous action on the successful result of a <see cref="Task{TResult}"/>
-	/// containing a <see cref="Result{T}"/>, without altering the result value.
+	/// Executes an asynchronous side effect when the current asynchronous <see cref="Result{T}"/> instance contains
+	/// a success value. Does not modify the result.
 	/// </summary>
-	/// <typeparam name="T">The type of the value held by the <see cref="Result{T}"/>.</typeparam>
-	/// <param name="result">The asynchronous task containing the result to process.</param>
-	/// <param name="action">An asynchronous action to execute if the result is successful.</param>
+	/// <typeparam name="T">The type of the success result in the current <see cref="Result{T}"/>.</typeparam>
+	/// <param name="result">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
+	/// <param name="action">The asynchronous action to execute if the <see cref="Result{T}"/> contains a success value.</param>
 	/// <returns>
-	/// A <see cref="Task{TResult}"/> containing the original <see cref="Result{T}"/>
-	/// after executing the provided action, or the original error if the result was unsuccessful.
+	/// A <see cref="Task{T}"/> that, when awaited, evaluates to the original <see cref="Result{T}"/> instance, unchanged.
 	/// </returns>
-	public static async Task<Result<T>> DoAsync<T>(this Task<Result<T>> result, Func<T, Task> action)
+	public static async Task<Result<T>> TapAsync<T>(this Task<Result<T>> result, Func<T, Task> action)
 	{
 		var awaitedResult = await result.ConfigureAwait(false);
 
-		return await awaitedResult.DoAsync(action).ConfigureAwait(false);
+		return await awaitedResult.TapAsync(action).ConfigureAwait(false);
 	}
 
 	/// <summary>
-	/// Executes an asynchronous action if the task represents a successful <see cref="Result{T}"/>.
+	/// Executes an asynchronous side effect when the current asynchronous <see cref="Result{T}"/> instance contains
+	/// a success value. Does not modify the result.
 	/// </summary>
-	/// <typeparam name="T">The type of the value held by the <see cref="Result{T}"/>.</typeparam>
-	/// <param name="result">The asynchronous task representing the <see cref="Result{T}"/> to process.</param>
-	/// <param name="action">The asynchronous action to execute on the successful result.</param>
+	/// <typeparam name="T">The type of the success result in the current <see cref="Result{T}"/>.</typeparam>
+	/// <param name="result">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
+	/// <param name="action">The asynchronous action to execute if the <see cref="Result{T}"/> contains a success value.</param>
 	/// <returns>
-	/// A <see cref="Task{TResult}"/> containing the original <see cref="Result{T}"/> if the action is executed,
-	/// or the original error if the result is unsuccessful.
+	/// A <see cref="Task{T}"/> that, when awaited, evaluates to the original <see cref="Result{T}"/> instance, unchanged.
 	/// </returns>
-	public static async Task<Result<T>> DoAsync<T>(this Task<Result<T>> result, Func<Task> action)
+	public static async Task<Result<T>> TapAsync<T>(this Task<Result<T>> result, Func<Task> action)
 	{
 		var awaitedResult = await result.ConfigureAwait(false);
 
-		return await awaitedResult.DoAsync(action).ConfigureAwait(false);
+		return await awaitedResult.TapAsync(action).ConfigureAwait(false);
 	}
 
 	/// <summary>
-	/// Provides an alternative value to the original result if it represents a failure,
-	/// returning a successful <see cref="Result{T}"/> with the given value.
+	/// Returns a new <see cref="Result{T}"/> with the specified alternative success value <paramref name="value"/>
+	/// if the original asynchronous <see cref="Result{T}"/> contains an error.
 	/// </summary>
-	/// <typeparam name="T">The type of the value held by the <see cref="Result{T}"/>.</typeparam>
-	/// <param name="result">The asynchronous task representing the original <see cref="Result{T}"/> to evaluate.</param>
-	/// <param name="value">The value to use if the original result represents a failure.</param>
+	/// <typeparam name="T">The type of the success result in the <see cref="Result{T}"/>.</typeparam>
+	/// <param name="result">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
+	/// <param name="value">The alternative success value to return if the original result contains an error.</param>
 	/// <returns>
-	/// A <see cref="Task{TResult}"/> containing a successful <see cref="Result{T}"/> with the provided value
-	/// if the original result was unsuccessful, or the original result if it was successful.
+	/// A <see cref="Task{T}"/> that, when awaited, evaluates to a <see cref="Result{T}"/> with either the original success value
+	/// or the provided alternative if the original result contains an error.
 	/// </returns>
-	public static async Task<Result<T>> Else<T>(this Task<Result<T>> result, T value)
+	public static async Task<Result<T>> OrElse<T>(this Task<Result<T>> result, T value)
 	{
 		var awaitedResult = await result.ConfigureAwait(false);
 
-		return awaitedResult.Else(value);
+		return awaitedResult.OrElse(value);
 	}
 
 	/// <summary>
-	/// Returns a new <see cref="Result{T}"/> with the provided fallback value
-	/// if the original result was unsuccessful, maintaining its asynchronous context.
+	/// Returns a new <see cref="Result{T}"/> with an alternative success value generated by <paramref name="valueFactory"/>
+	/// if the original asynchronous <see cref="Result{T}"/> contains an error.
 	/// </summary>
-	/// <typeparam name="T">The type of the value held by the <see cref="Result{T}"/>.</typeparam>
-	/// <param name="result">The asynchronous task representing the <see cref="Result{T}"/> to evaluate.</param>
-	/// <param name="value">A function returning the fallback value to use if the result is unsuccessful.</param>
+	/// <typeparam name="T">The type of the success result in the <see cref="Result{T}"/>.</typeparam>
+	/// <param name="result">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
+	/// <param name="valueFactory">The factory function to generate an alternative success value if the original result contains an error.</param>
 	/// <returns>
-	/// A <see cref="Task{TResult}"/> containing a <see cref="Result{T}"/> with the original value if successful,
-	/// or the specified fallback value if unsuccessful.
+	/// A <see cref="Task{T}"/> that, when awaited, evaluates to a <see cref="Result{T}"/> with either the original success value
+	/// or the generated alternative.
 	/// </returns>
-	public static async Task<Result<T>> Else<T>(this Task<Result<T>> result, Func<T> value)
+	public static async Task<Result<T>> OrElse<T>(this Task<Result<T>> result, Func<T> valueFactory)
 	{
 		var awaitedResult = await result.ConfigureAwait(false);
 
-		return awaitedResult.Else(value);
+		return awaitedResult.OrElse(valueFactory);
 	}
 
 	/// <summary>
-	/// Provides an alternative value using a mapping function when the asynchronous <see cref="Result{T}"/> is unsuccessful.
+	/// Returns a new <see cref="Result{T}"/> asynchronously with an alternative success value generated by
+	/// <paramref name="valueFactory"/> if the original asynchronous <see cref="Result{T}"/> contains an error.
 	/// </summary>
-	/// <typeparam name="T">The type of the value held by the result.</typeparam>
-	/// <param name="result">The asynchronous task representing the <see cref="Result{T}"/> to process.</param>
-	/// <param name="value">A function that maps the <see cref="Error"/> from the failed result to a new value.</param>
+	/// <typeparam name="T">The type of the success result in the <see cref="Result{T}"/>.</typeparam>
+	/// <param name="result">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
+	/// <param name="valueFactory">The asynchronous factory function to generate an alternative success value if the original
+	/// result contains an error.</param>
 	/// <returns>
-	/// A <see cref="Task{TResult}"/> containing a <see cref="Result{T}"/> that holds the original value
-	/// if the result was successful, or the mapped value if the result was unsuccessful.
+	/// A <see cref="Task{T}"/> that, when awaited, evaluates to a <see cref="Result{T}"/> with either the original success value
+	/// or the generated alternative.
 	/// </returns>
-	public static async Task<Result<T>> Else<T>(this Task<Result<T>> result, Func<Error, T> value)
+	public static async Task<Result<T>> OrElseAsync<T>(this Task<Result<T>> result, Func<Task<T>> valueFactory)
 	{
 		var awaitedResult = await result.ConfigureAwait(false);
 
-		return awaitedResult.Else(value);
+		return await awaitedResult.OrElseAsync(valueFactory).ConfigureAwait(false);
 	}
 
 	/// <summary>
-	/// Transforms the result of a failed asynchronous <see cref="Result{T}"/> using a mapping function, returning
-	/// a new <see cref="Result{T}"/> provided by the mapping function, or the original successful result if it exists.
+	/// Recovers from the error state of the current asynchronous <see cref="Result{T}"/> instance by providing a fallback success
+	/// value using the specified recovery function <paramref name="map"/>.
 	/// </summary>
-	/// <typeparam name="T">The type of the value held by the <see cref="Result{T}"/>.</typeparam>
-	/// <param name="result">The asynchronous task representing the <see cref="Result{T}"/> to be evaluated.</param>
-	/// <param name="map">A function that accepts an <see cref="Error"/> from the failed result and returns a new <see cref="Result{T}"/>.</param>
+	/// <typeparam name="T">The type of the success result in the <see cref="Result{T}"/>.</typeparam>
+	/// <param name="result">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
+	/// <param name="map">The function to generate a fallback success value when the current result contains an error.</param>
 	/// <returns>
-	/// A <see cref="Task{TResult}"/> containing either the original successful result or the transformed
-	/// result provided by the mapping function if the original result was unsuccessful.
+	/// A <see cref="Task{T}"/> that, when awaited, evaluates to a new <see cref="Result{T}"/>. If the original result is successful,
+	/// the result is returned unchanged. If the original result is a failure, the recovery function generates a new success value.
 	/// </returns>
-	public static async Task<Result<T>> Else<T>(this Task<Result<T>> result, Func<Error, Result<T>> map)
+	public static async Task<Result<T>> Recover<T>(this Task<Result<T>> result, Func<Error, T> map)
 	{
 		var awaitedResult = await result.ConfigureAwait(false);
 
-		return awaitedResult.Else(map);
+		return awaitedResult.Recover(map);
 	}
 
 	/// <summary>
-	/// Transforms the error of an unsuccessful <see cref="Result{T}"/> wrapped in a <see cref="Task{TResult}"/>
-	/// using an asynchronous mapping function, returning a new <see cref="Result{T}"/> wrapped in a <see cref="Task{TResult}"/>.
+	/// Recovers from the error state of the current asynchronous <see cref="Result{T}"/> instance by providing
+	/// a fallback success value asynchronously through the specified recovery function <paramref name="map"/>.
 	/// </summary>
-	/// <typeparam name="T">The type of the value held by the <see cref="Result{T}"/>.</typeparam>
-	/// <param name="result">The asynchronous task representing the <see cref="Result{T}"/> to process.</param>
-	/// <param name="map">The asynchronous mapping function to transform the error when the result is unsuccessful.</param>
+	/// <typeparam name="T">The type of the success result in the <see cref="Result{T}"/>.</typeparam>
+	/// <param name="result">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
+	/// <param name="map">
+	/// The asynchronous recovery function to generate a fallback success value. This function is invoked if the current result
+	/// contains an error.
+	/// </param>
 	/// <returns>
-	/// A <see cref="Task{TResult}"/> containing a <see cref="Result{T}"/>
-	/// with the original value if the result was successful or a new value transformed from the error if the result was unsuccessful.
+	/// A <see cref="Task{T}"/> that, when awaited, evaluates to a new <see cref="Result{T}"/>. If the current result
+	/// is successful, it is returned unchanged. If the current result contains an error, the recovery function generates
+	/// a fallback success value asynchronously.
 	/// </returns>
-	public static async Task<Result<T>> ElseAsync<T>(this Task<Result<T>> result, Func<Error, Task<T>> map)
+	public static async Task<Result<T>> RecoverAsync<T>(this Task<Result<T>> result, Func<Error, Task<T>> map)
 	{
 		var awaitedResult = await result.ConfigureAwait(false);
 
-		return await awaitedResult.ElseAsync(map).ConfigureAwait(false);
+		return await awaitedResult.RecoverAsync(map).ConfigureAwait(false);
 	}
 
 	/// <summary>
-	/// Executes the specified action when the <see cref="Result{T}"/> represents a failure,
-	/// and returns the original result.
+	/// Recovers from the error state of the current asynchronous <see cref="Result{T}"/> instance by providing a new
+	/// <see cref="Result{T}"/> using the specified recovery function <paramref name="map"/>.
 	/// </summary>
-	/// <typeparam name="T">The type of the value held by the <see cref="Result{T}"/>.</typeparam>
-	/// <param name="result">The asynchronous task representing the <see cref="Result{T}"/> to evaluate.</param>
-	/// <param name="action">The action to execute with the <see cref="Error"/> from the failed result.</param>
+	/// <typeparam name="T">The type of the success result in the <see cref="Result{T}"/>.</typeparam>
+	/// <param name="result">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
+	/// <param name="map">The function to generate a new <see cref="Result{T}"/> when the current result contains an error.</param>
 	/// <returns>
-	/// A <see cref="Task{T}"/> containing the same <see cref="Result{T}"/> instance passed as input.
+	/// A <see cref="Task{T}"/> that, when awaited, evaluates to a new <see cref="Result{T}"/>. If the original result is successful,
+	/// it is returned unchanged; otherwise, the recovery function generates a new result.
 	/// </returns>
-	public static async Task<Result<T>> ElseDo<T>(this Task<Result<T>> result, Action<Error> action)
+	public static async Task<Result<T>> RecoverWith<T>(this Task<Result<T>> result, Func<Error, Result<T>> map)
 	{
 		var awaitedResult = await result.ConfigureAwait(false);
 
-		return awaitedResult.ElseDo(action);
+		return awaitedResult.RecoverWith(map);
 	}
 
 	/// <summary>
-	/// Executes an asynchronous action if the <see cref="Result{T}"/> encapsulates an error,
-	/// returning the original result unchanged.
+	/// Recovers from the error state of the current asynchronous <see cref="Result{T}"/> instance by providing another
+	/// asynchronous <see cref="Result{T}"/> through the specified recovery function <paramref name="map"/>.
 	/// </summary>
-	/// <typeparam name="T">The type of the value contained in the <see cref="Result{T}"/>.</typeparam>
-	/// <param name="result">The asynchronous task representing the <see cref="Result{T}"/> to evaluate.</param>
-	/// <param name="action">The asynchronous action to execute when the result contains an error.</param>
+	/// <typeparam name="T">The type of the success result in the <see cref="Result{T}"/>.</typeparam>
+	/// <param name="result">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
+	/// <param name="map">
+	/// The asynchronous recovery function that generates a new <see cref="Result{T}"/> if the current result contains an error.
+	/// </param>
 	/// <returns>
-	/// A <see cref="Task{TResult}"/> containing the original <see cref="Result{T}"/> after the action has been executed
-	/// if an error is present, or the original successful result.
+	/// A <see cref="Task{T}"/> that, when awaited, evaluates to a new <see cref="Result{T}"/>. If the current result is successful,
+	/// it is returned unchanged. If the current result contains an error, the recovery function generates and returns another
+	/// asynchronous <see cref="Result{T}"/>.
 	/// </returns>
-	public static async Task<Result<T>> ElseDoAsync<T>(this Task<Result<T>> result, Func<Error, Task> action)
+	public static async Task<Result<T>> RecoverWithAsync<T>(this Task<Result<T>> result, Func<Error, Task<Result<T>>> map)
 	{
 		var awaitedResult = await result.ConfigureAwait(false);
 
-		return await awaitedResult.ElseDoAsync(action).ConfigureAwait(false);
+		return await awaitedResult.RecoverWithAsync(map).ConfigureAwait(false);
 	}
 
 	/// <summary>
-	/// Evaluates an asynchronous <see cref="Result{T}"/> and applies either the <paramref name="onSuccess"/> function
-	/// to the successful value or the <paramref name="onFailure"/> function to the error, returning a value of type <typeparamref name="TResult"/>.
+	/// Executes the specified action <paramref name="action"/> if the current asynchronous <see cref="Result{T}"/>
+	/// instance contains an error. Does not modify the result.
 	/// </summary>
-	/// <typeparam name="T">The type of the value held by the <see cref="Result{T}"/>.</typeparam>
-	/// <typeparam name="TResult">The type of the value to be returned by the match operation.</typeparam>
-	/// <param name="result">The asynchronous task representing the <see cref="Result{T}"/> to match.</param>
-	/// <param name="onSuccess">The function to invoke with the successful value of the result.</param>
-	/// <param name="onFailure">The function to invoke with the error if the result is unsuccessful.</param>
+	/// <typeparam name="T">The type of the success result in the <see cref="Result{T}"/>.</typeparam>
+	/// <param name="result">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
+	/// <param name="action">The action to execute if the <see cref="Result{T}"/> contains an error.</param>
 	/// <returns>
-	/// A <typeparamref name="TResult"/> produced by invoking either the <paramref name="onSuccess"/> function if the result
-	/// was successful, or the <paramref name="onFailure"/> function if the result was unsuccessful.
+	/// A <see cref="Task"/> that, when awaited, evaluates to the current <see cref="Result{T}"/> instance, unchanged.
 	/// </returns>
-	public static async Task<Result<TResult>> Match<T, TResult>(this Task<Result<T>> result, Func<T, TResult> onSuccess, Func<Error, TResult> onFailure)
+	public static async Task<Result<T>> OnFailure<T>(this Task<Result<T>> result, Action<Error> action)
 	{
 		var awaitedResult = await result.ConfigureAwait(false);
 
-		return awaitedResult.Match(onSuccess, onFailure);
+		return awaitedResult.OnFailure(action);
 	}
 
 	/// <summary>
-	/// Matches a <see cref="Result{T}"/> wrapped in a <see cref="Task{TResult}"/> asynchronously,
-	/// by applying one of two asynchronous functions depending on whether the result is successful or unsuccessful.
+	/// Executes the specified asynchronous action <paramref name="action"/> if the current asynchronous <see cref="Result{T}"/>
+	/// instance contains an error. Does not modify the result.
 	/// </summary>
-	/// <typeparam name="T">The type of the value held by the <see cref="Result{T}"/>.</typeparam>
-	/// <typeparam name="TResult">The type of the result produced by the provided asynchronous functions.</typeparam>
-	/// <param name="result">The asynchronous task representing the <see cref="Result{T}"/> to match against.</param>
-	/// <param name="onSuccess">The asynchronous function to apply to the value of a successful result.</param>
-	/// <param name="onFailure">The asynchronous function to apply to the error of an unsuccessful result.</param>
+	/// <typeparam name="T">The type of the success result in the <see cref="Result{T}"/>.</typeparam>
+	/// <param name="result">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
+	/// <param name="action">The asynchronous action to execute if the <see cref="Result{T}"/> contains an error.</param>
 	/// <returns>
-	/// An asynchronous task that, upon completion, yields the result of the function applied either to the value
-	/// of the successful result or to the error of the unsuccessful result.
+	/// A <see cref="Task"/> that, when awaited, evaluates to the current <see cref="Result{T}"/> instance, unchanged.
+	/// </returns>
+	public static async Task<Result<T>> OnFailureAsync<T>(this Task<Result<T>> result, Func<Error, Task> action)
+	{
+		var awaitedResult = await result.ConfigureAwait(false);
+
+		return await awaitedResult.OnFailureAsync(action).ConfigureAwait(false);
+	}
+
+	/// <summary>
+	/// Executes the specified function <paramref name="onSuccess"/> if the current asynchronous <see cref="Result{T}"/>
+	/// instance contains a success value, or <paramref name="onError"/> if it contains an error, and returns the produced result.
+	/// </summary>
+	/// <typeparam name="T">The type of the success result in the <see cref="Result{T}"/>.</typeparam>
+	/// <typeparam name="TResult">The type of the result produced by the functions.</typeparam>
+	/// <param name="result">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
+	/// <param name="onSuccess">The function to execute if the <see cref="Result{T}"/> contains a success value.</param>
+	/// <param name="onError">The function to execute if the <see cref="Result{T}"/> contains an error.</param>
+	/// <returns>
+	/// A <see cref="Task{TResult}"/> that, when awaited, evaluates to the result produced by either
+	/// <paramref name="onSuccess"/> or <paramref name="onError"/>.
+	/// </returns>
+	public static async Task<Result<TResult>> Match<T, TResult>(this Task<Result<T>> result, Func<T, TResult> onSuccess, Func<Error, TResult> onError)
+	{
+		var awaitedResult = await result.ConfigureAwait(false);
+
+		return awaitedResult.Match(onSuccess, onError);
+	}
+
+	/// <summary>
+	/// Asynchronously executes the specified function <paramref name="onSuccess"/> if the current asynchronous
+	/// <see cref="Result{T}"/> instance contains a success value, or <paramref name="onError"/> if it contains an error,
+	/// and returns the produced result.
+	/// </summary>
+	/// <typeparam name="T">The type of the success result in the <see cref="Result{T}"/>.</typeparam>
+	/// <typeparam name="TResult">The type of the result produced by the asynchronous functions.</typeparam>
+	/// <param name="result">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
+	/// <param name="onSuccess">The asynchronous function to execute if the <see cref="Result{T}"/> contains a success value.</param>
+	/// <param name="onError">The asynchronous function to execute if the <see cref="Result{T}"/> contains an error.</param>
+	/// <returns>
+	/// A <see cref="Task{TResult}"/> that, when awaited, evaluates to the result produced by either
+	/// <paramref name="onSuccess"/> or <paramref name="onError"/>.
 	/// </returns>
 	public static async Task<TResult> MatchAsync<T, TResult>(
 		this Task<Result<T>> result,
 		Func<T, Task<TResult>> onSuccess,
-		Func<Error, Task<TResult>> onFailure)
+		Func<Error, Task<TResult>> onError)
 	{
 		var awaitedResult = await result.ConfigureAwait(false);
 
-		return await awaitedResult.MatchAsync(onSuccess, onFailure).ConfigureAwait(false);
+		return await awaitedResult.MatchAsync(onSuccess, onError).ConfigureAwait(false);
 	}
 
 	/// <summary>
-	/// Executes the specified actions based on the state of the asynchronous <see cref="Result{T}"/>.
+	/// Executes the specified action <paramref name="onSuccess"/> if the current asynchronous <see cref="Result{T}"/>
+	/// instance contains a success value, or <paramref name="onError"/> if it contains an error. Does not modify the result.
 	/// </summary>
-	/// <typeparam name="T">The type of the value contained in the <see cref="Result{T}"/>.</typeparam>
-	/// <param name="result">The asynchronous task representing the <see cref="Result{T}"/>.</param>
-	/// <param name="onSuccess">
-	/// An action to execute if the <see cref="Result{T}"/> represents a successful state. The value contained in the result will be passed to this action.
-	/// </param>
-	/// <param name="onFailure">
-	/// An action to execute if the <see cref="Result{T}"/> represents a failure state. The error representing the failure will be passed to this action.
-	/// </param>
+	/// <typeparam name="T">The type of the success result in the <see cref="Result{T}"/>.</typeparam>
+	/// <param name="result">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
+	/// <param name="onSuccess">The action to execute if the <see cref="Result{T}"/> contains a success value.</param>
+	/// <param name="onError">The action to execute if the <see cref="Result{T}"/> contains an error.</param>
 	/// <returns>
-	/// A <see cref="Task{TResult}"/> containing the original <see cref="Result{T}"/> after the appropriate action has been executed.
+	/// A <see cref="Task"/> that, when awaited, evaluates to the current <see cref="Result{T}"/> instance, unchanged.
 	/// </returns>
-	public static async Task<Result<T>> Switch<T>(this Task<Result<T>> result, Action<T> onSuccess, Action<Error> onFailure)
+	public static async Task<Result<T>> Switch<T>(this Task<Result<T>> result, Action<T> onSuccess, Action<Error> onError)
 	{
 		var awaitedResult = await result.ConfigureAwait(false);
 
-		return awaitedResult.Switch(onSuccess, onFailure);
+		return awaitedResult.Switch(onSuccess, onError);
 	}
 
 	/// <summary>
-	/// Executes asynchronous actions based on the outcome of a <see cref="Result{T}"/> wrapped in a <see cref="Task{TResult}"/>.
-	/// If the result is successful, the <paramref name="onSuccess"/> action is invoked with the value.
-	/// If the result is unsuccessful, the <paramref name="onFailure"/> action is invoked with the error.
+	/// Asynchronously executes the specified action <paramref name="onSuccess"/> if the current asynchronous
+	/// <see cref="Result{T}"/> instance contains a success value, or <paramref name="onError"/> if it contains an error.
+	/// Does not modify the result.
 	/// </summary>
-	/// <typeparam name="T">The type of the value held by the <see cref="Result{T}"/>.</typeparam>
-	/// <param name="result">The asynchronous task representing the <see cref="Result{T}"/> to process.</param>
-	/// <param name="onSuccess">The asynchronous action to execute when the result is successful, using the value of the successful result.</param>
-	/// <param name="onFailure">The asynchronous action to execute when the result is unsuccessful, using the error of the failed result.</param>
+	/// <typeparam name="T">The type of the success result in the <see cref="Result{T}"/>.</typeparam>
+	/// <param name="result">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
+	/// <param name="onSuccess">The asynchronous action to execute if the <see cref="Result{T}"/> contains a success value.</param>
+	/// <param name="onError">The asynchronous action to execute if the <see cref="Result{T}"/> contains an error.</param>
 	/// <returns>
-	/// An asynchronous task containing the original <see cref="Result{T}"/> after the appropriate action has been executed.
+	/// A <see cref="Task"/> that, when awaited, evaluates to the current <see cref="Result{T}"/> instance, unchanged.
 	/// </returns>
-	public static async Task<Result<T>> SwitchAsync<T>(this Task<Result<T>> result, Func<T, Task> onSuccess, Func<Error, Task> onFailure)
+	public static async Task<Result<T>> SwitchAsync<T>(this Task<Result<T>> result, Func<T, Task> onSuccess, Func<Error, Task> onError)
 	{
 		var awaitedResult = await result.ConfigureAwait(false);
 
-		return await awaitedResult.SwitchAsync(onSuccess, onFailure).ConfigureAwait(false);
+		return await awaitedResult.SwitchAsync(onSuccess, onError).ConfigureAwait(false);
 	}
 
 	/// <summary>
-	/// Evaluates a predicate against the value of a successful <see cref="Result{T}"/> wrapped in a <see cref="Task{TResult}"/>.
-	/// If the predicate evaluates to true, returns a failed <see cref="Result{T}"/> with the specified error.
+	/// Returns a failure result with the specified error <paramref name="error"/> if the current success value satisfies
+	/// the given predicate <paramref name="predicate"/>; otherwise, returns the original result.
+	/// </summary>
+	/// <typeparam name="T">The type of the success result in the <see cref="Result{T}"/>.</typeparam>
+	/// <param name="result">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
+	/// <param name="predicate">The predicate to evaluate on the success value of the result.</param>
+	/// <param name="error">The error to return if the predicate evaluates to <c>true</c>.</param>
+	/// <returns>
+	/// A <see cref="Task{T}"/> that, when awaited, evaluates to either the original result or a failure result.
+	/// </returns>
+	public static async Task<Result<T>> FailWhen<T>(this Task<Result<T>> result, Func<T, bool> predicate, Error error)
+	{
+		var awaitedResult = await result.ConfigureAwait(false);
+
+		return awaitedResult.FailWhen(predicate, error);
+	}
+
+	/// <summary>
+	/// Returns a failure result when the specified predicate <paramref name="predicate"/> evaluates to <c>true</c>.
+	/// Uses the provided factory <paramref name="errorFactory"/> to generate the error dynamically.
+	/// </summary>
+	/// <typeparam name="T">The type of the success result in the <see cref="Result{T}"/>.</typeparam>
+	/// <param name="result">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
+	/// <param name="predicate">The predicate to evaluate the success value of the result.</param>
+	/// <param name="errorFactory">A factory function to dynamically generate an error if the predicate evaluates to <c>true</c>.</param>
+	/// <returns>
+	/// A <see cref="Task{T}"/> that, when awaited, evaluates to either the original result or a failure result.
+	/// </returns>
+	public static async Task<Result<T>> FailWhenWith<T>(this Task<Result<T>> result, Func<T, bool> predicate, Func<Error> errorFactory)
+	{
+		var awaitedResult = await result.ConfigureAwait(false);
+
+		return awaitedResult.FailWhenWith(predicate, errorFactory);
+	}
+
+	/// <summary>
+	/// Returns a failure result when the specified predicate <paramref name="predicate"/> evaluates to <c>true</c>.
+	/// Uses the provided factory <paramref name="errorFactory"/> to generate the error dynamically.
+	/// </summary>
+	/// <typeparam name="T">The type of the success result in the <see cref="Result{T}"/>.</typeparam>
+	/// <param name="result">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
+	/// <param name="predicate">The predicate to evaluate the success value of the result.</param>
+	/// <param name="errorFactory">A factory function to dynamically generate an error if the predicate evaluates to <c>true</c>.</param>
+	/// <returns>
+	/// A <see cref="Task{T}"/> that, when awaited, evaluates to either the original result or a failure result.
+	/// </returns>
+	public static async Task<Result<T>> FailWhenWith<T>(this Task<Result<T>> result, Func<T, bool> predicate, Func<T, Error> errorFactory)
+	{
+		var awaitedResult = await result.ConfigureAwait(false);
+
+		return awaitedResult.FailWhenWith(predicate, errorFactory);
+	}
+
+	/// <summary>
+	/// Asynchronously returns a failure result with the error generated by <paramref name="errorFactory"/>
+	/// if the success value satisfies the given predicate <paramref name="predicate"/>.
 	/// Otherwise, returns the original result.
 	/// </summary>
-	/// <typeparam name="T">The type of the value held by the input <see cref="Result{T}"/>.</typeparam>
-	/// <param name="result">The asynchronous task representing the <see cref="Result{T}"/> to be evaluated.</param>
-	/// <param name="predicate">The synchronous function that evaluates the value of the successful result to determine if the operation should fail.</param>
-	/// <param name="error">The error to return in case the predicate evaluates to true.</param>
+	/// <typeparam name="T">The type of the success result in the <see cref="Result{T}"/>.</typeparam>
+	/// <param name="result">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
+	/// <param name="predicate">An asynchronous predicate to evaluate the success value of the result.</param>
+	/// <param name="errorFactory">
+	/// An asynchronous factory function that generates the error if the predicate evaluates to <c>true</c>.
+	/// </param>
 	/// <returns>
-	/// A task containing the original <see cref="Result{T}"/> if the predicate returns false, or a failed <see cref="Result{T}"/>
-	/// with the specified error if the predicate returns true.
+	/// A <see cref="Task{T}"/> that, when awaited, evaluates to either the original result or a failure result.
 	/// </returns>
-	public static async Task<Result<T>> FailIf<T>(this Task<Result<T>> result, Func<T, bool> predicate, Error error)
+	public static async Task<Result<T>> FailWhenWithAsync<T>(this Task<Result<T>> result, Func<T, bool> predicate, Func<Task<Error>> errorFactory)
 	{
 		var awaitedResult = await result.ConfigureAwait(false);
 
-		return awaitedResult.FailIf(predicate, error);
+		return await awaitedResult.FailWhenWithAsync(predicate, errorFactory).ConfigureAwait(false);
 	}
 
 	/// <summary>
-	/// Checks the value of a successful <see cref="Result{T}"/> wrapped in a <see cref="Task{TResult}"/>
-	/// against a condition specified by the predicate. If the predicate evaluates to true, transforms the result into a failure
-	/// by assigning the provided error generated by the specified function.
+	/// Asynchronously returns a failure result with the error generated asynchronously by <paramref name="errorFactory"/>
+	/// using the current success value if the predicate <paramref name="predicate"/> evaluates to <c>true</c>.
+	/// Otherwise, returns the original result.
 	/// </summary>
-	/// <typeparam name="T">The type of the value held by the <see cref="Result{T}"/>.</typeparam>
-	/// <param name="result">The asynchronous task representing the <see cref="Result{T}"/> to evaluate.</param>
-	/// <param name="predicate">The function that defines the condition to evaluate the value.</param>
-	/// <param name="error">The function to generate the error to assign if the condition is true.</param>
-	/// <returns>
-	/// A <see cref="Task{TResult}"/> containing a <see cref="Result{T}"/>.
-	/// If the predicate evaluates to true, the returned result will be a failure with the error produced by the factory function;
-	/// otherwise, it will contain the original value.
-	/// </returns>
-	public static async Task<Result<T>> FailIf<T>(this Task<Result<T>> result, Func<T, bool> predicate, Func<Error> error)
-	{
-		var awaitedResult = await result.ConfigureAwait(false);
-
-		return awaitedResult.FailIf(predicate, error);
-	}
-
-	/// <summary>
-	/// Applies a failure transformation to the result if the specified condition is met.
-	/// </summary>
-	/// <typeparam name="T">The type of the value held by the input <see cref="Result{T}"/>.</typeparam>
-	/// <param name="result">The asynchronous task representing the <see cref="Result{T}"/> to evaluate.</param>
-	/// <param name="predicate">The function that evaluates the value to determine whether the condition for failure is met.</param>
-	/// <param name="error">The function that generates an <see cref="Error"/> based on the value that satisfies the predicate.</param>
-	/// <returns>
-	/// A <see cref="Task{TResult}"/> containing a <see cref="Result{T}"/>.
-	/// If the predicate evaluates to true, the returned result will be a failure with the error produced by the factory function;
-	/// otherwise, it will contain the original value.
-	/// </returns>
-	public static async Task<Result<T>> FailIf<T>(this Task<Result<T>> result, Func<T, bool> predicate, Func<T, Error> error)
-	{
-		var awaitedResult = await result.ConfigureAwait(false);
-
-		return awaitedResult.FailIf(predicate, error);
-	}
-
-	/// <summary>
-	/// Creates a new <see cref="Result{T}"/> representing a failure if the given asynchronous predicate evaluates to true,
-	/// using the specified asynchronous error factory function to produce the error object.
-	/// </summary>
-	/// <typeparam name="T">The type of the value held by the <see cref="Result{T}"/>.</typeparam>
-	/// <param name="result">The asynchronous task representing the <see cref="Result{T}"/> to evaluate.</param>
-	/// <param name="predicate">The asynchronous function that determines whether the result value should trigger a failure.</param>
-	/// <param name="error">The asynchronous function to produce the <see cref="Error"/> object when the predicate evaluates to true.</param>
-	/// <returns>
-	/// A <see cref="Task{TResult}"/> containing a <see cref="Result{T}"/>.
-	/// If the predicate evaluates to true, the returned result will be a failure with the error produced by the factory function;
-	/// otherwise, it will contain the original value.
-	/// </returns>
-	public static async Task<Result<T>> FailIfAsync<T>(this Task<Result<T>> result, Func<T, bool> predicate, Func<Task<Error>> error)
-	{
-		var awaitedResult = await result.ConfigureAwait(false);
-
-		return await awaitedResult.FailIfAsync(predicate, error).ConfigureAwait(false);
-	}
-
-	/// <summary>
-	/// Evaluates a condition on the value of a successful <see cref="Result{T}"/> wrapped in a <see cref="Task{TResult}"/>.
-	/// If the condition is true, an asynchronous function generates an error to produce a failed result.
-	/// </summary>
-	/// <typeparam name="T">The type of the value held by the input <see cref="Result{T}"/>.</typeparam>
-	/// <param name="result">The asynchronous task representing the <see cref="Result{T}"/> to evaluate.</param>
-	/// <param name="predicate">A function that determines whether to fail the result, based on the value of the result.</param>
-	/// <param name="error">An asynchronous function that generates an <see cref="Error"/> when the predicate evaluates to true.</param>
-	/// <returns>
-	/// A <see cref="Task{TResult}"/> containing a <see cref="Result{T}"/>.
-	/// If the predicate evaluates to true, the returned result will be a failure with the error produced by the factory function;
-	/// otherwise, it will contain the original value.
-	/// </returns>
-	public static async Task<Result<T>> FailIfAsync<T>(this Task<Result<T>> result, Func<T, bool> predicate, Func<T, Task<Error>> error)
-	{
-		var awaitedResult = await result.ConfigureAwait(false);
-
-		return await awaitedResult.FailIfAsync(predicate, error).ConfigureAwait(false);
-	}
-
-	/// <summary>
-	/// Conditionally transforms a successful <see cref="Result{T}"/> wrapped in a <see cref="Task{TResult}"/>
-	/// into a failed result if an asynchronous predicate is satisfied. Returns the original result if the predicate is not satisfied.
-	/// </summary>
-	/// <typeparam name="T">The type of the value held by the <see cref="Result{T}"/>.</typeparam>
-	/// <param name="result">The asynchronous task representing the <see cref="Result{T}"/> to evaluate and potentially transform.</param>
-	/// <param name="predicate">An asynchronous predicate function applied to the value of the successful result.
-	/// If the predicate evaluates to true, the result is transformed into a failed result.</param>
-	/// <param name="error">The error to associate with the failed result if the predicate evaluates to true.</param>
-	/// <returns>
-	/// A <see cref="Task{TResult}"/> containing the original <see cref="Result{T}"/> if the predicate is not satisfied,
-	/// or a failed <see cref="Result{T}"/> containing the specified error if the predicate evaluates to true.
-	/// </returns>
-	public static async Task<Result<T>> FailIfAsync<T>(this Task<Result<T>> result, Func<T, Task<bool>> predicate, Error error)
-	{
-		var awaitedResult = await result.ConfigureAwait(false);
-
-		return await awaitedResult.FailIfAsync(predicate, error).ConfigureAwait(false);
-	}
-
-	/// <summary>
-	/// Evaluates an asynchronous predicate on the value within a successful <see cref="Result{T}"/> wrapped in
-	/// a <see cref="Task{TResult}"/>. If the predicate evaluates to true, it generates an error using the provided
-	/// function and returns a failed <see cref="Result{T}"/>; otherwise, it returns the original result.
-	/// </summary>
-	/// <typeparam name="T">The type of the value contained within the <see cref="Result{T}"/>.</typeparam>
-	/// <param name="result">The asynchronous task containing the <see cref="Result{T}"/> to be evaluated.</param>
+	/// <typeparam name="T">The type of the success result in the <see cref="Result{T}"/>.</typeparam>
+	/// <param name="result">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
 	/// <param name="predicate">
-	/// A function that receives the value of the successful result and evaluates a <see cref="Task{TResult}"/>
-	/// returning a <see cref="bool"/> to determine whether the error should be generated.
+	/// An asynchronous predicate to evaluate whether the failure condition is met.
+	/// </param>
+	/// <param name="errorFactory">
+	/// An asynchronous factory function that uses the success value to generate the error if the predicate evaluates to <c>true</c>.
+	/// </param>
+	/// <returns>
+	/// A <see cref="Task{T}"/> that, when awaited, evaluates to either the original result or a failure result.
+	/// </returns>
+	public static async Task<Result<T>> FailWhenWithAsync<T>(this Task<Result<T>> result, Func<T, bool> predicate, Func<T, Task<Error>> errorFactory)
+	{
+		var awaitedResult = await result.ConfigureAwait(false);
+
+		return await awaitedResult.FailWhenWithAsync(predicate, errorFactory).ConfigureAwait(false);
+	}
+
+	/// <summary>
+	/// Asynchronously returns a failure result with the specified error <paramref name="error"/> if the success value satisfies
+	/// the asynchronous predicate <paramref name="predicate"/>.
+	/// Otherwise, returns the original result.
+	/// </summary>
+	/// <typeparam name="T">The type of the success result in the <see cref="Result{T}"/>.</typeparam>
+	/// <param name="result">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
+	/// <param name="predicate">
+	/// An asynchronous predicate to evaluate the success value of the result.
 	/// </param>
 	/// <param name="error">
-	/// A function to generate an <see cref="Error"/> if the predicate evaluates to true.
+	/// The error to return as the failure result if the predicate evaluates to <c>true</c>.
 	/// </param>
 	/// <returns>
-	/// A <see cref="Task{TResult}"/> containing a <see cref="Result{T}"/>.
-	/// If the predicate evaluates to true, the returned result will be a failure with the error produced by the factory function;
-	/// otherwise, it will contain the original value.
+	/// A <see cref="Task{T}"/> that, when awaited, evaluates to either the original result or a failure result.
 	/// </returns>
-	public static async Task<Result<T>> FailIfAsync<T>(this Task<Result<T>> result, Func<T, Task<bool>> predicate, Func<Error> error)
+	public static async Task<Result<T>> FailWhenAsync<T>(this Task<Result<T>> result, Func<T, Task<bool>> predicate, Error error)
 	{
 		var awaitedResult = await result.ConfigureAwait(false);
 
-		return await awaitedResult.FailIfAsync(predicate, error).ConfigureAwait(false);
+		return await awaitedResult.FailWhenAsync(predicate, error).ConfigureAwait(false);
 	}
 
 	/// <summary>
-	/// Applies an asynchronous failure condition to the value of a successful <see cref="Result{T}"/> wrapped in a <see cref="Task{TResult}"/>.
-	/// If the condition specified by the predicate is met, a failure result is returned using the error provided by the function.
-	/// Otherwise, the original successful result is returned.
+	/// Asynchronously returns a failure result with the error generated by <paramref name="errorFactory"/>
+	/// if the success value satisfies the asynchronous predicate <paramref name="predicate"/>.
+	/// Otherwise, returns the original result.
 	/// </summary>
-	/// <typeparam name="T">The type of the value held by the <see cref="Result{T}"/>.</typeparam>
-	/// <param name="result">The asynchronous task representing the <see cref="Result{T}"/> to evaluate.</param>
-	/// <param name="predicate">The asynchronous function to apply to the value of the successful result to determine if a failure should be triggered.</param>
-	/// <param name="error">The function to generate the failure <see cref="Error"/> based on the value of the result.</param>
+	/// <typeparam name="T">The type of the success result in the <see cref="Result{T}"/>.</typeparam>
+	/// <param name="result">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
+	/// <param name="predicate">An asynchronous predicate to evaluate the success value of the result.</param>
+	/// <param name="errorFactory">
+	/// A factory function that generates the error if the predicate evaluates to <c>true</c>.
+	/// </param>
 	/// <returns>
-	/// A <see cref="Task{TResult}"/> containing a <see cref="Result{T}"/>.
-	/// If the predicate evaluates to true, the returned result will be a failure with the error produced by the factory function;
-	/// otherwise, it will contain the original value.
+	/// A <see cref="Task{T}"/> that, when awaited, evaluates to either the original result or a failure result.
 	/// </returns>
-	public static async Task<Result<T>> FailIfAsync<T>(this Task<Result<T>> result, Func<T, Task<bool>> predicate, Func<T, Error> error)
+	public static async Task<Result<T>> FailWhenWithAsync<T>(this Task<Result<T>> result, Func<T, Task<bool>> predicate, Func<Error> errorFactory)
 	{
 		var awaitedResult = await result.ConfigureAwait(false);
 
-		return await awaitedResult.FailIfAsync(predicate, error).ConfigureAwait(false);
+		return await awaitedResult.FailWhenWithAsync(predicate, errorFactory).ConfigureAwait(false);
 	}
 
 	/// <summary>
-	/// Asynchronously applies a failure condition to the value of a successful <see cref="Result{T}"/>,
-	/// and returns a failed result if the predicate is satisfied, using the provided asynchronous error factory.
+	/// Asynchronously returns a failure result with the error generated by <paramref name="errorFactory"/>
+	/// that uses the current success value if the asynchronous predicate <paramref name="predicate"/> evaluates to <c>true</c>.
+	/// Otherwise, returns the original result.
 	/// </summary>
-	/// <typeparam name="T">The type of the value held by the <see cref="Result{T}"/>.</typeparam>
-	/// <param name="result">The asynchronous task representing the <see cref="Result{T}"/> to evaluate.</param>
-	/// <param name="predicate">An asynchronous function that evaluates the value to determine if the result should fail.</param>
-	/// <param name="error">An asynchronous function that generates the <see cref="Error"/> if the predicate is satisfied.</param>
+	/// <typeparam name="T">The type of the success result in the <see cref="Result{T}"/>.</typeparam>
+	/// <param name="result">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
+	/// <param name="predicate">An asynchronous predicate to evaluate the success value of the result.</param>
+	/// <param name="errorFactory">
+	/// A factory function that uses the success value to generate the error if the predicate evaluates to <c>true</c>.
+	/// </param>
 	/// <returns>
-	/// A <see cref="Task{TResult}"/> containing a <see cref="Result{T}"/>.
-	/// If the predicate evaluates to true, the returned result will be a failure with the error produced by the factory function;
-	/// otherwise, it will contain the original value.
+	/// A <see cref="Task{T}"/> that, when awaited, evaluates to either the original result or a failure result.
 	/// </returns>
-	public static async Task<Result<T>> FailIfAsync<T>(this Task<Result<T>> result, Func<T, Task<bool>> predicate, Func<Task<Error>> error)
+	public static async Task<Result<T>> FailWhenWithAsync<T>(this Task<Result<T>> result, Func<T, Task<bool>> predicate, Func<T, Error> errorFactory)
 	{
 		var awaitedResult = await result.ConfigureAwait(false);
 
-		return await awaitedResult.FailIfAsync(predicate, error).ConfigureAwait(false);
+		return await awaitedResult.FailWhenWithAsync(predicate, errorFactory).ConfigureAwait(false);
 	}
 
 	/// <summary>
-	/// Evaluates an asynchronous predicate against the successful value of a <see cref="Result{T}"/> wrapped in a <see cref="Task{TResult}"/>.
-	/// If the predicate evaluates to true, transforms the result into a failure with an asynchronous error factory.
+	/// Asynchronously returns a failure result with the error generated by <paramref name="errorFactory"/>
+	/// if the asynchronous predicate <paramref name="predicate"/> evaluates to <c>true</c>.
+	/// Otherwise, returns the original result.
 	/// </summary>
-	/// <typeparam name="T">The type of the value held by the <see cref="Result{T}"/>.</typeparam>
-	/// <param name="result">The asynchronous task representing the <see cref="Result{T}"/> to evaluate.</param>
-	/// <param name="predicate">The asynchronous predicate to evaluate against the successful value of the result.</param>
-	/// <param name="error">An asynchronous factory function to generate an <see cref="Error"/> if the predicate evaluates to true.</param>
+	/// <typeparam name="T">The type of the success result in the <see cref="Result{T}"/>.</typeparam>
+	/// <param name="result">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
+	/// <param name="predicate">An asynchronous predicate to evaluate the success value of the result.</param>
+	/// <param name="errorFactory">
+	/// An asynchronous factory function that generates the error if the predicate evaluates to <c>true</c>.
+	/// </param>
 	/// <returns>
-	/// A <see cref="Task{TResult}"/> containing a <see cref="Result{T}"/>.
-	/// If the predicate evaluates to true, the returned result will be a failure with the error produced by the factory function;
-	/// otherwise, it will contain the original value.
+	/// A <see cref="Task{T}"/> that, when awaited, evaluates to either the original result or a failure result.
 	/// </returns>
-	public static async Task<Result<T>> FailIfAsync<T>(this Task<Result<T>> result, Func<T, Task<bool>> predicate, Func<T, Task<Error>> error)
+	public static async Task<Result<T>> FailWhenWithAsync<T>(this Task<Result<T>> result, Func<T, Task<bool>> predicate, Func<Task<Error>> errorFactory)
 	{
 		var awaitedResult = await result.ConfigureAwait(false);
 
-		return await awaitedResult.FailIfAsync(predicate, error).ConfigureAwait(false);
+		return await awaitedResult.FailWhenWithAsync(predicate, errorFactory).ConfigureAwait(false);
 	}
 
 	/// <summary>
-	/// Converts a synchronous <see cref="Result{T}"/> instance into an asynchronous <see cref="Task{TResult}"/>
-	/// representing the same result.
+	/// Asynchronously returns a failure result with the error generated by <paramref name="errorFactory"/>
+	/// that uses the current success value if the asynchronous predicate <paramref name="predicate"/> evaluates to <c>true</c>.
+	/// Otherwise, returns the original result.
 	/// </summary>
-	/// <typeparam name="T">The type of the value held by the <see cref="Result{T}"/>.</typeparam>
-	/// <param name="result">The synchronous <see cref="Result{T}"/> to convert.</param>
-	/// <returns>A <see cref="Task{TResult}"/> representing the provided <see cref="Result{T}"/>.</returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	/// <typeparam name="T">The type of the success result in the <see cref="Result{T}"/>.</typeparam>
+	/// <param name="result">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
+	/// <param name="predicate">An asynchronous predicate to evaluate the success value of the result.</param>
+	/// <param name="errorFactory">
+	/// An asynchronous factory function that uses the success value to generate the error if the predicate evaluates to <c>true</c>.
+	/// </param>
+	/// <returns>
+	/// A <see cref="Task{T}"/> that, when awaited, evaluates to either the original result or a failure result.
+	/// </returns>
+	public static async Task<Result<T>> FailWhenWithAsync<T>(this Task<Result<T>> result, Func<T, Task<bool>> predicate, Func<T, Task<Error>> errorFactory)
+	{
+		var awaitedResult = await result.ConfigureAwait(false);
+
+		return await awaitedResult.FailWhenWithAsync(predicate, errorFactory).ConfigureAwait(false);
+	}
+
+	/// <summary>
+	/// Wraps the given synchronous <see cref="Result{T}"/> into a <see cref="Task"/> to make it asynchronous.
+	/// </summary>
+	/// <typeparam name="T">The type of the success result in the <see cref="Result{T}"/>.</typeparam>
+	/// <param name="result">The synchronous <see cref="Result{T}"/> to be wrapped as asynchronous.</param>
+	/// <returns>
+	/// A <see cref="Task{T}"/> that, when awaited, evaluates to the same <see cref="Result{T}"/> instance.
+	/// </returns>
 	public static Task<Result<T>> ToAsync<T>(this Result<T> result)
-		=> Task.FromResult(result);
+	{
+		return Task.FromResult(result);
+	}
 
 	/// <summary>
-	/// Converts a value of type <typeparamref name="T"/> into an asynchronous <see cref="Result{T}"/> instance representing success.
+	/// Wraps the provided value into an asynchronous successful <see cref="Result{T}"/>.
 	/// </summary>
-	/// <typeparam name="T">The type of the value to be encapsulated in the <see cref="Result{T}"/>.</typeparam>
-	/// <param name="value">The value to convert into a successful <see cref="Result{T}"/>.</param>
-	/// <returns>A <see cref="Task{TResult}"/> containing a <see cref="Result{T}"/> that represents success.</returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	/// <typeparam name="T">The type of the success result in the <see cref="Result{T}"/>.</typeparam>
+	/// <param name="value">The value to be wrapped as a successful result.</param>
+	/// <returns>
+	/// A <see cref="Task{T}"/> that, when awaited, evaluates to a successful <see cref="Result{T}"/> containing the provided value.
+	/// </returns>
 	public static Task<Result<T>> ToAsyncResult<T>(this T value)
 		where T : notnull
-		=> Task.FromResult(Result<T>.Success(value));
+	{
+		return Task.FromResult(Result<T>.Success(value));
+	}
 
 	/// <summary>
-	/// Converts a nullable value of type <typeparamref name="T"/> into an asynchronous <see cref="Task{TResult}"/>
-	/// containing a <see cref="Result{T}"/>. If the value is not null, it succeeds with the value;
-	/// otherwise, it fails with the provided <paramref name="notFoundError"/>.
+	/// Wraps the specified nullable value into an asynchronous <see cref="Result{T}"/>.
+	/// If the value is <c>null</c>, returns an asynchronous failure result with the provided error.
 	/// </summary>
-	/// <typeparam name="T">The type of the value to wrap in a <see cref="Result{T}"/>.</typeparam>
-	/// <param name="value">The nullable value to convert into a <see cref="Result{T}"/>.</param>
-	/// <param name="notFoundError">The error instance to include in the result when the value is null.</param>
-	/// <returns>A <see cref="Task{TResult}"/> containing the resulting <see cref="Result{T}"/> based on the provided value.</returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	/// <typeparam name="T">The type of the success result in the <see cref="Result{T}"/>.</typeparam>
+	/// <param name="value">The nullable value to wrap as a success result, or to return as an error if <c>null</c>.</param>
+	/// <param name="notFoundError">The error to return if the supplied value is <c>null</c>.</param>
+	/// <returns>
+	/// A <see cref="Task{T}"/> that, when awaited, evaluates to either a successful or failed <see cref="Result{T}"/>
+	/// depending on the value.
+	/// </returns>
 	public static Task<Result<T>> ToAsyncResult<T>(this T? value, Error notFoundError)
 		where T : notnull
-		=> Task.FromResult(value is not null ? Result<T>.Success(value) : Result<T>.Failure(notFoundError));
+	{
+		return Task.FromResult(value is not null ? Result<T>.Success(value) : Result<T>.Failure(notFoundError));
+	}
 
 	/// <summary>
-	/// Converts the specified value into an asynchronous <see cref="Result{T}"/> instance, where the result represents
-	/// a success containing the provided value.
+	/// Wraps the specified nullable value into an asynchronous <see cref="Result{T}"/>.
+	/// If the value is <c>null</c>, the provided factory function <paramref name="notFoundError"/> is used to generate an error.
 	/// </summary>
-	/// <typeparam name="T">The type of the value to be converted into a <see cref="Result{T}"/>.</typeparam>
-	/// <param name="value">The value to wrap in a successful <see cref="Result{T}"/>.</param>
-	/// <param name="notFoundError">The function that returns an error instance to include in the result when the value is null.</param>
-	/// <returns>A <see cref="Task{TResult}"/> representing a successful <see cref="Result{T}"/> containing the provided value.</returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	/// <typeparam name="T">The type of the success result in the <see cref="Result{T}"/>.</typeparam>
+	/// <param name="value">The nullable value to wrap as a success result, or return a failure result if <c>null</c>.</param>
+	/// <param name="notFoundError">A factory function to generate an error result if <paramref name="value"/> is <c>null</c>.</param>
+	/// <returns>
+	/// A <see cref="Task{T}"/> that, when awaited, evaluates to either a successful or failed <see cref="Result{T}"/>
+	/// depending on the value.
+	/// </returns>
 	public static Task<Result<T>> ToAsyncResult<T>(this T? value, Func<Error> notFoundError)
 		where T : notnull
-		=> Task.FromResult(value is not null ? Result<T>.Success(value) : Result<T>.Failure(notFoundError()));
+	{
+		return Task.FromResult(value is not null ? Result<T>.Success(value) : Result<T>.Failure(notFoundError()));
+	}
 }

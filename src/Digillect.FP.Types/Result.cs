@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-
 namespace Digillect.FP.Types;
 
 /// <summary>
@@ -28,16 +26,20 @@ public readonly struct Result<T> : IResult
 	/// </summary>
 	/// <param name="value">The value associated with the success result.</param>
 	/// <returns>The created successful result.</returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Result<T> Success(T value) => new(value);
+	public static Result<T> Success(T value)
+	{
+		return new Result<T>(value);
+	}
 
 	/// <summary>
 	/// Creates a failed result with the provided error.
 	/// </summary>
 	/// <param name="error">The error associated with the failure result.</param>
 	/// <returns>The created failed result.</returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Result<T> Failure(Error error) => new(error);
+	public static Result<T> Failure(Error error)
+	{
+		return new Result<T>(error);
+	}
 
 	/// <summary>
 	/// Indicates whether the result represents a successful operation.
@@ -70,16 +72,20 @@ public readonly struct Result<T> : IResult
 	/// </summary>
 	/// <param name="value">The value to wrap in a successful result.</param>
 	/// <returns>A successful result containing the provided value.</returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static implicit operator Result<T>(T value) => new(value);
+	public static implicit operator Result<T>(T value)
+	{
+		return new Result<T>(value);
+	}
 
 	/// <summary>
 	/// Allows implicit conversion from an <see cref="Error"/> to a failed result of type <see cref="Result{T}"/>.
 	/// </summary>
 	/// <param name="error">The error to wrap in a failed result.</param>
 	/// <returns>A failed result containing the provided error.</returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static implicit operator Result<T>(Error error) => new(error);
+	public static implicit operator Result<T>(Error error)
+	{
+		return new Result<T>(error);
+	}
 
 	/// <summary>
 	/// Provides an implicit operator to convert a result of type <typeparamref name="T"/>
@@ -92,88 +98,102 @@ public readonly struct Result<T> : IResult
 	/// A new <see cref="Result{T}"/> instance where the type is <see cref="Unit"/>.
 	/// The returned result is successful if the original is successful, otherwise it propagates the failure.
 	/// </returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static implicit operator Result<Unit>(Result<T> result)
-		=> result.IsSuccess ? Result<Unit>.Success(Unit.Default) : Result<Unit>.Failure(result.Error);
-
-	/// <summary>
-	/// Executes a continuation function on the result's value if the result is successful.
-	/// If the result is failed, propagates the existing error.
-	/// </summary>
-	/// <typeparam name="TResult">The type of the value produced by the continuation function.</typeparam>
-	/// <param name="next">The continuation function to execute on the result's value.</param>
-	/// <returns>
-	/// A new result containing the value produced by the continuation function
-	/// if the original result is successful, or the original error if it is failed.
-	/// </returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Result<TResult> Then<TResult>(Func<T, TResult> next)
 	{
-		return _error is not null ? Result<TResult>.Failure(_error) : Result<TResult>.Success(next(_value));
+		return result.IsSuccess ? Result<Unit>.Success(Unit.Default) : Result<Unit>.Failure(result.Error);
 	}
 
 	/// <summary>
-	/// Executes an asynchronous continuation function if the current result represents a successful outcome.
+	/// Transforms the successful result using the provided mapping function.
 	/// </summary>
-	/// <param name="next">The asynchronous function to invoke on the value of the successful result.</param>
-	/// <typeparam name="TResult">The type of the value returned by the continuation function.</typeparam>
+	/// <typeparam name="T">The type of the successful result in the input <see cref="Result{T}"/> instance.</typeparam>
+	/// <typeparam name="TResult">The type of the mapped result returned by the mapping function.</typeparam>
+	/// <param name="map">
+	/// A function that transforms the successful result into a value of type <typeparamref name="TResult" />.
+	/// </param>
 	/// <returns>
-	/// A task that represents the result of asynchronously applying the continuation function.
-	/// If the current result is successful, returns a successful result with the mapped value.
-	/// If the current result is a failure, propagates the failure without invoking the continuation.
+	/// A <see cref="Result{TResult}"/> containing the transformed success value or the original error.
 	/// </returns>
-	public async Task<Result<TResult>> ThenAsync<TResult>(Func<T, Task<TResult>> next)
+	public Result<TResult> Map<TResult>(Func<T, TResult> map)
+	{
+		return _error is not null ? Result<TResult>.Failure(_error) : Result<TResult>.Success(map(_value));
+	}
+
+	/// <summary>
+	/// Asynchronously transforms the successful result using the provided asynchronous mapping function.
+	/// </summary>
+	/// <typeparam name="T">The type of the successful result in the input <see cref="Result{T}"/> instance.</typeparam>
+	/// <typeparam name="TResult">The type of the mapped result returned by the asynchronous mapping function.</typeparam>
+	/// <param name="map">
+	/// An asynchronous function that transforms the successful result into a value of type <typeparamref name="TResult" />.
+	/// </param>
+	/// <returns>
+	/// A <see cref="Task{T}"/> that, when awaited, returns a <see cref="Result{TResult}"/> containing the transformed success value or the original error.
+	/// </returns>
+	public async Task<Result<TResult>> MapAsync<TResult>(Func<T, Task<TResult>> map)
 	{
 		if (_error is not null)
 		{
 			return Result<TResult>.Failure(_error);
 		}
 
-		var result = await next(_value).ConfigureAwait(false);
+		var result = await map(_value).ConfigureAwait(false);
 
 		return Result<TResult>.Success(result);
 	}
 
 	/// <summary>
-	/// Chains the execution of a continuation function if the current result is successful.
+	/// Chains the successful result to another operation that returns a <see cref="Result{TResult}"/> using the provided binding function.
 	/// </summary>
-	/// <typeparam name="TResult">The type of the value in the resulting result.</typeparam>
-	/// <param name="next">The function to invoke if the current result is successful.</param>
+	/// <typeparam name="T">The type of the successful result in the input <see cref="Result{T}"/> instance.</typeparam>
+	/// <typeparam name="TResult">The type of the result returned by the binding function.</typeparam>
+	/// <param name="bind">
+	/// A function that maps the successful result into a new <see cref="Result{TResult}"/>.
+	/// </param>
 	/// <returns>
-	/// A new result containing the value from the provided continuation function if the current result is successful,
-	/// or a failed result containing the current error if the result is unsuccessful.
+	/// A <see cref="Result{TResult}"/> containing the new success value or the original error.
 	/// </returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Result<TResult> Then<TResult>(Func<T, Result<TResult>> next)
+	public Result<TResult> Bind<TResult>(Func<T, Result<TResult>> bind)
 	{
-		return _error is not null ? Result<TResult>.Failure(_error) : next(_value);
+		return _error is not null ? Result<TResult>.Failure(_error) : bind(_value);
 	}
 
 	/// <summary>
-	/// Asynchronously chains the current successful result to a continuation function that returns a task of a result.
+	/// Asynchronously chains the successful result to another operation that returns a <see cref="Result{TResult}"/> using the provided asynchronous binding function.
 	/// </summary>
-	/// <param name="next">A function that takes the value of the current result and returns a task wrapping the next result.</param>
-	/// <typeparam name="TResult">The type of the result produced by the continuation function.</typeparam>
-	/// <returns>A task representing the result of the continuation if the current result was successful; otherwise, the failed result.</returns>
-	public async Task<Result<TResult>> ThenAsync<TResult>(Func<T, Task<Result<TResult>>> next)
+	/// <typeparam name="T">The type of the successful result in the input <see cref="Result{T}"/> instance.</typeparam>
+	/// <typeparam name="TResult">The type of the result returned by the binding function.</typeparam>
+	/// <param name="bind">
+	/// An asynchronous function that maps the successful result into a new <see cref="Result{TResult}"/>.
+	/// </param>
+	/// <returns>
+	/// A <see cref="Task{T}"/> that, when awaited, returns a <see cref="Result{TResult}"/> containing the new success value or the original error.
+	/// </returns>
+	public async Task<Result<TResult>> BindAsync<TResult>(Func<T, Task<Result<TResult>>> bind)
 	{
 		if (_error is not null)
 		{
 			return Result<TResult>.Failure(_error);
 		}
 
-		var result = await next(_value).ConfigureAwait(false);
+		var result = await bind(_value).ConfigureAwait(false);
 
 		return result;
 	}
 
 	/// <summary>
-	/// Performs an action on the successful value of the current result if it represents success.
+	/// Performs a side effect using the successful result of the current <see cref="Result{T}" /> instance.
+	/// Does not modify the result.
 	/// </summary>
-	/// <param name="action">The action to be performed on the successful value.</param>
-	/// <returns>The current result.</returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Result<T> Do(Action<T> action)
+	/// <typeparam name="T">The type of the successful result in the current <see cref="Result{T}" /> instance.</typeparam>
+	/// <param name="action">
+	/// An action to execute with the successful result.
+	/// This action cannot modify the original result.
+	/// </param>
+	/// <returns>
+	/// The original <see cref="Result{T}" /> instance, unchanged.
+	/// </returns>
+	public Result<T> Tap(Action<T> action)
 	{
 		if (_error is null)
 		{
@@ -184,17 +204,18 @@ public readonly struct Result<T> : IResult
 	}
 
 	/// <summary>
-	/// Asynchronously performs the given action if the result represents a successful state.
+	/// Asynchronously performs a side effect using the successful result of the current <see cref="Result{T}" /> instance.
+	/// Does not modify the result.
 	/// </summary>
+	/// <typeparam name="T">The type of the successful result in the current <see cref="Result{T}" /> instance.</typeparam>
 	/// <param name="action">
-	/// The asynchronous action to execute on the encapsulated value if the result is successful.
+	/// An asynchronous action to execute with the successful result.
+	/// This action cannot modify the original result.
 	/// </param>
 	/// <returns>
-	/// A task that completes with the original result.
-	/// If the result is a failure, no action is performed, and the failure state is preserved.
+	/// A <see cref="Task{T}" /> that, when awaited, returns the original <see cref="Result{T}" /> instance, unchanged.
 	/// </returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public async Task<Result<T>> DoAsync(Func<T, Task> action)
+	public async Task<Result<T>> TapAsync(Func<T, Task> action)
 	{
 		if (_error is null)
 		{
@@ -205,12 +226,18 @@ public readonly struct Result<T> : IResult
 	}
 
 	/// <summary>
-	/// Executes the provided asynchronous action if the result is successful.
+	/// Asynchronously performs a side effect using the successful result of the current <see cref="Result{T}" /> instance.
+	/// Does not modify the result.
 	/// </summary>
-	/// <param name="action">The asynchronous action to perform.</param>
-	/// <returns>A task that represents the asynchronous operation, containing the result.</returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public async Task<Result<T>> DoAsync(Func<Task> action)
+	/// <typeparam name="T">The type of the successful result in the current <see cref="Result{T}" /> instance.</typeparam>
+	/// <param name="action">
+	/// An asynchronous action to execute with the successful result.
+	/// This action cannot modify the original result.
+	/// </param>
+	/// <returns>
+	/// A <see cref="Task{T}" /> that, when awaited, returns the original <see cref="Result{T}" /> instance, unchanged.
+	/// </returns>
+	public async Task<Result<T>> TapAsync(Func<Task> action)
 	{
 		if (_error is null)
 		{
@@ -221,80 +248,143 @@ public readonly struct Result<T> : IResult
 	}
 
 	/// <summary>
-	/// Returns the current result if it represents a success; otherwise, returns a successful result with the specified value.
+	/// Provides an alternative value in case the current <see cref="Result{T}"/> instance contains an error.
 	/// </summary>
-	/// <param name="value">The value to return as a successful result if the current result is a failure.</param>
-	/// <returns>The current result if successful; otherwise, a successful result with the provided value.</returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Result<T> Else(T value)
-	{
-		return _error is null ? this : Success(value);
-	}
-
-	/// <summary>
-	/// Provides an alternative value to be used if the current result represents a failure.
-	/// </summary>
-	/// <param name="value">A function that returns the alternative value to be used when the result is a failure.</param>
+	/// <typeparam name="T">The type of the successful result in the input <see cref="Result{T}"/> instance.</typeparam>
+	/// <param name="alternative">
+	/// A value to return as an alternative if the current instance contains an error.
+	/// </param>
 	/// <returns>
-	/// A new result containing the original success value or the alternative value if the current result is a failure.
+	/// A <see cref="Result{T}"/> containing the original success value or the provided alternative.
 	/// </returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Result<T> Else(Func<T> value)
+	public Result<T> OrElse(T alternative)
 	{
-		return _error is null ? this : Success(value());
+		return _error is null ? this : Success(alternative);
 	}
 
 	/// <summary>
-	/// Transforms the error of a failed result using the specified mapping function, while preserving the original result if it is successful.
+	/// Provides a factory for alternative value in case the current <see cref="Result{T}"/> instance contains an error.
 	/// </summary>
-	/// <param name="map">A function that maps the error to a value of type <typeparamref name="T"/>.</param>
-	/// <returns>The original successful result if no error exists, otherwise a transformed result containing the mapped value.</returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Result<T> Else(Func<Error, T> map)
-	{
-		return _error is null ? this : Success(map(_error));
-	}
-
-	/// <summary>
-	/// Returns the current result if it is successful; otherwise, evaluates the provided mapping function
-	/// on the error and returns the resulting <see cref="Result{T}"/>.
-	/// </summary>
-	/// <param name="map">A function that takes an <see cref="Error"/> and returns a new <see cref="Result{T}"/>.</param>
-	/// <returns>The current result if it is successful; otherwise, the result of the mapping function.</returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Result<T> Else(Func<Error, Result<T>> map)
-	{
-		return _error is null ? this : map(_error);
-	}
-
-	/// <summary>
-	/// Provides an asynchronous fallback mechanism by applying the specified function when the result is a failure.
-	/// </summary>
-	/// <param name="map">A function to map the error to a new success value asynchronously.</param>
+	/// <typeparam name="T">The type of the successful result in the input <see cref="Result{T}"/> instance.</typeparam>
+	/// <param name="alternativeFactory">
+	/// A factory for a value to return as an alternative if the current instance contains an error.
+	/// </param>
 	/// <returns>
-	/// A task that represents the asynchronous operation, returning a successful result if the fallback mapping is applied,
-	/// or the original result if it is successful.
+	/// A <see cref="Result{T}"/> containing the original success value or the provided alternative.
 	/// </returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public async Task<Result<T>> ElseAsync(Func<Error, Task<T>> map)
+	public Result<T> OrElse(Func<T> alternativeFactory)
+	{
+		return _error is null ? this : Success(alternativeFactory());
+	}
+
+	/// <summary>
+	/// Asynchronously provides an alternative value in case the current <see cref="Result{T}"/> instance contains an error.
+	/// </summary>
+	/// <typeparam name="T">The type of the successful result in the input <see cref="Result{T}"/> instance.</typeparam>
+	/// <param name="alternativeFactory">
+	/// An asynchronous factory that provides an alternative value if the current instance contains an error.
+	/// </param>
+	/// <returns>
+	/// A <see cref="Task{T}"/> that, when awaited, returns a <see cref="Result{T}"/> containing the original success value or the provided alternative.
+	/// </returns>
+	public async Task<Result<T>> OrElseAsync(Func<Task<T>> alternativeFactory)
 	{
 		if (_error is null)
 		{
 			return this;
 		}
 
-		var result = await map(_error).ConfigureAwait(false);
+		var value = await alternativeFactory();
+
+		return Success(value);
+	}
+
+	/// <summary>
+	/// Handles the current error by mapping it to an alternative value.
+	/// </summary>
+	/// <typeparam name="T">The type of the successful result in the input <see cref="Result{T}"/> instance.</typeparam>
+	/// <param name="recover">
+	/// A function that maps the error to an alternative value.
+	/// </param>
+	/// <returns>
+	/// A <see cref="Result{T}"/> containing the new success value or the original result.
+	/// </returns>
+	public Result<T> Recover(Func<Error, T> recover)
+	{
+		return _error is null ? this : Success(recover(_error));
+	}
+
+	/// <summary>
+	/// Asynchronously handles the current error by mapping it to an alternative value.
+	/// </summary>
+	/// <typeparam name="T">The type of the successful result in the input <see cref="Result{T}"/> instance.</typeparam>
+	/// <param name="recover">
+	/// An asynchronous function that maps the error to an alternate <see cref="Result{T}"/> containing a success result.
+	/// </param>
+	/// <returns>
+	/// A <see cref="Task{T}"/> that, when awaited, returns a <see cref="Result{T}"/>, containing the new success value or the original result.
+	/// </returns>
+	public async Task<Result<T>> RecoverAsync(Func<Error, Task<T>> recover)
+	{
+		if (_error is null)
+		{
+			return this;
+		}
+
+		var result = await recover(_error).ConfigureAwait(false);
 
 		return Success(result);
 	}
 
 	/// <summary>
-	/// Executes the specified action if the result represents a failure.
+	/// Handles the current error iby providing an alternate <see cref="Result{T}"/> object.
 	/// </summary>
-	/// <param name="action">An action to perform on the error associated with the failed result.</param>
-	/// <returns>The current result instance.</returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Result<T> ElseDo(Action<Error> action)
+	/// <typeparam name="T">The type of the successful result in the <see cref="Result{T}"/> instance.</typeparam>
+	/// <param name="recover">
+	/// A function that maps the error to an alternate <see cref="Result{T}"/> object containing a new success value or a different error.
+	/// </param>
+	/// <returns>
+	/// A <see cref="Result{T}"/> containing the original success value, or the result of the <paramref name="recover"/> function if an error exists.
+	/// </returns>
+	public Result<T> RecoverWith(Func<Error, Result<T>> recover)
+	{
+		return _error is null ? this : recover(_error);
+	}
+
+	/// <summary>
+	/// Asynchronously handles the current error by providing an alternate <see cref="Result{T}"/> object.
+	/// </summary>
+	/// <typeparam name="T">The type of the successful result in the <see cref="Result{T}"/> instance.</typeparam>
+	/// <param name="recover">
+	/// An asynchronous function that maps the error to an alternate <see cref="Result{T}"/> object containing a new success value or a different error.
+	/// </param>
+	/// <returns>
+	/// A <see cref="Task{T}"/> that, when awaited, returns a <see cref="Result{T}"/> containing the original success value, or the result of the <paramref name="recover"/> function if an error exists.
+	/// </returns>
+	public async Task<Result<T>> RecoverWithAsync(Func<Error, Task<Result<T>>> recover)
+	{
+		if (_error is null)
+		{
+			return this;
+		}
+
+		var result = await recover(_error);
+
+		return result;
+	}
+
+	/// <summary>
+	/// Performs a side effect when the current <see cref="Result{T}"/> instance contains an error.
+	/// Does not modify the result.
+	/// </summary>
+	/// <typeparam name="T">The type of the successful result in the current <see cref="Result{T}"/> instance.</typeparam>
+	/// <param name="action">
+	/// An action to execute when the instance contains an error. The action receives the error value as its parameter.
+	/// </param>
+	/// <returns>
+	/// The original <see cref="Result{T}"/> instance, unchanged.
+	/// </returns>
+	public Result<T> OnFailure(Action<Error> action)
 	{
 		if (_error is not null)
 		{
@@ -305,12 +395,38 @@ public readonly struct Result<T> : IResult
 	}
 
 	/// <summary>
-	/// Executes an asynchronous action if the result represents a failure.
+	/// Asynchronously performs a side effect when the current <see cref="Result{T}"/> instance contains an error.
+	/// Does not modify the result.
 	/// </summary>
-	/// <param name="action">The asynchronous action to execute, receiving the error from the failed result.</param>
-	/// <returns>The current result instance.</returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public async Task<Result<T>> ElseDoAsync(Func<Error, Task> action)
+	/// <typeparam name="T">The type of the successful result in the current <see cref="Result{T}"/> instance.</typeparam>
+	/// <param name="action">
+	/// An asynchronous action to execute when the instance contains an error.
+	/// </param>
+	/// <returns>
+	/// A <see cref="Task{T}"/> that, when awaited, returns the original <see cref="Result{T}"/> instance, unchanged.
+	/// </returns>
+	public async Task<Result<T>> OnFailureAsync(Func<Task> action)
+	{
+		if (_error is not null)
+		{
+			await action().ConfigureAwait(false);
+		}
+
+		return this;
+	}
+
+	/// <summary>
+	/// Asynchronously performs a side effect when the current <see cref="Result{T}"/> instance contains an error.
+	/// Does not modify the result.
+	/// </summary>
+	/// <typeparam name="T">The type of the successful result in the current <see cref="Result{T}"/> instance.</typeparam>
+	/// <param name="action">
+	/// An asynchronous action to execute when the instance contains an error. The action receives the error value as its parameter.
+	/// </param>
+	/// <returns>
+	/// A <see cref="Task{T}"/> that, when awaited, returns the original <see cref="Result{T}"/> instance, unchanged.
+	/// </returns>
+	public async Task<Result<T>> OnFailureAsync(Func<Error, Task> action)
 	{
 		if (_error is not null)
 		{
@@ -321,39 +437,67 @@ public readonly struct Result<T> : IResult
 	}
 
 	/// <summary>
-	/// Invokes the specified functions based on the state of the result and returns the result of the invoked function.
+	/// Matches the current <see cref="Result{T}"/> instance to one of two specified functions: one for a successful result
+	/// and another for an error. Returns the result of the corresponding function.
 	/// </summary>
-	/// <param name="onSuccess">The function to invoke if the result represents a success.</param>
-	/// <param name="onFailure">The function to invoke if the result represents a failure.</param>
-	/// <returns>The result of invoking the appropriate function.</returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public TResult Match<TResult>(Func<T, TResult> onSuccess, Func<Error, TResult> onFailure)
-		=> _error is null ? onSuccess(_value) : onFailure(_error);
-
-	/// <summary>
-	/// Handles the result asynchronously based on its state, invoking the appropriate function for success or failure.
-	/// </summary>
+	/// <typeparam name="T">The type of the successful result in the current <see cref="Result{T}"/> instance.</typeparam>
+	/// <typeparam name="TResult">The type of the value returned by the match functions.</typeparam>
 	/// <param name="onSuccess">
-	/// The function to invoke if the result is successful. Takes the value of the result as input and produces a Task with a result.
+	/// A function to execute if the instance contains a successful result.
+	/// The function takes the success value as input and returns a value of type <typeparamref name="TResult"/>.
 	/// </param>
-	/// <param name="onFailure">
-	/// The function to invoke if the result is a failure. Takes the error of the result as input and produces a Task with a result.
+	/// <param name="onError">
+	/// A function to execute if the instance contains an error.
+	/// The function takes the error value as input and returns a value of type <typeparamref name="TResult"/>.
 	/// </param>
-	/// <returns>A Task containing the result of the invoked function based on the result state.</returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Task<TResult> MatchAsync<TResult>(Func<T, Task<TResult>> onSuccess, Func<Error, Task<TResult>> onFailure)
+	/// <returns>
+	/// A value of type <typeparamref name="TResult"/> returned by either <paramref name="onSuccess"/> or <paramref name="onError"/>.
+	/// </returns>
+	public TResult Match<TResult>(Func<T, TResult> onSuccess, Func<Error, TResult> onError)
 	{
-		return _error is null ? onSuccess(_value) : onFailure(_error);
+		return _error is null ? onSuccess(_value) : onError(_error);
 	}
 
 	/// <summary>
-	/// Invokes the provided actions based on the result's state and returns the current result.
+	/// Asynchronously matches the current <see cref="Result{T}"/> instance to one of two specified asynchronous functions:
+	/// one for a successful result and another for an error. Returns the result of the corresponding function.
 	/// </summary>
-	/// <param name="onSuccess">The action to execute if the result is successful.</param>
-	/// <param name="onFailure">The action to execute if the result is a failure.</param>
-	/// <returns>The current result instance.</returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Result<T> Switch(Action<T> onSuccess, Action<Error> onFailure)
+	/// <typeparam name="T">The type of the successful result in the current <see cref="Result{T}"/> instance.</typeparam>
+	/// <typeparam name="TResult">The type of the value returned by the asynchronous match functions.</typeparam>
+	/// <param name="onSuccess">
+	/// An asynchronous function to execute if the instance contains a successful result.
+	/// The function takes the success value as input and returns a value of type <typeparamref name="TResult"/>.
+	/// </param>
+	/// <param name="onError">
+	/// An asynchronous function to execute if the instance contains an error.
+	/// The function takes the error value as input and returns a value of type <typeparamref name="TResult"/>.
+	/// </param>
+	/// <returns>
+	/// A <see cref="Task{T}"/> that, when awaited, returns a value of type <typeparamref name="TResult"/>
+	/// produced by either the <paramref name="onSuccess"/> or <paramref name="onError"/> function.
+	/// </returns>
+	public Task<TResult> MatchAsync<TResult>(Func<T, Task<TResult>> onSuccess, Func<Error, Task<TResult>> onError)
+	{
+		return _error is null ? onSuccess(_value) : onError(_error);
+	}
+
+	/// <summary>
+	/// Executes one of two specified actions depending on whether the current <see cref="Result{T}"/> instance
+	/// contains a success or an error.
+	/// </summary>
+	/// <typeparam name="T">The type of the successful result in the current <see cref="Result{T}"/> instance.</typeparam>
+	/// <param name="onSuccess">
+	/// An action to execute if the instance contains a successful result.
+	/// The action takes the success value as its parameter.
+	/// </param>
+	/// <param name="onError">
+	/// An action to execute if the instance contains an error.
+	/// The action takes the error value as its parameter.
+	/// </param>
+	/// <remarks>
+	/// This method is used primarily for executing side effects (e.g., logging) without transforming the result.
+	/// </remarks>
+	public Result<T> Switch(Action<T> onSuccess, Action<Error> onError)
 	{
 		if (_error is null)
 		{
@@ -361,19 +505,33 @@ public readonly struct Result<T> : IResult
 		}
 		else
 		{
-			onFailure(_error);
+			onError(_error);
 		}
 
 		return this;
 	}
 
 	/// <summary>
-	/// Asynchronously executes the provided functions depending on the result state.
+	/// Asynchronously executes one of two specified actions depending on whether the current <see cref="Result{T}"/> instance
+	/// contains a success or an error.
 	/// </summary>
-	/// <param name="onSuccess">The function to execute if the result is successful.</param>
-	/// <param name="onFailure">The function to execute if the result is a failure.</param>
-	/// <returns>The current result instance.</returns>
-	public async Task<Result<T>> SwitchAsync(Func<T, Task> onSuccess, Func<Error, Task> onFailure)
+	/// <typeparam name="T">The type of the successful result in the current <see cref="Result{T}"/> instance.</typeparam>
+	/// <param name="onSuccess">
+	/// An asynchronous action to execute if the instance contains a successful result.
+	/// The action takes the success value as its parameter.
+	/// </param>
+	/// <param name="onError">
+	/// An asynchronous action to execute if the instance contains an error.
+	/// The action takes the error value as its parameter.
+	/// </param>
+	/// <returns>
+	/// A <see cref="Task"/> that completes execution after one of the actions has been performed.
+	/// </returns>
+	/// <remarks>
+	/// This method is used primarily for handling side effects (e.g., logging, asynchronous notifications),
+	/// without modifying or transforming the result.
+	/// </remarks>
+	public async Task<Result<T>> SwitchAsync(Func<T, Task> onSuccess, Func<Error, Task> onError)
 	{
 		if (_error is null)
 		{
@@ -381,23 +539,22 @@ public readonly struct Result<T> : IResult
 		}
 		else
 		{
-			await onFailure(_error).ConfigureAwait(false);
+			await onError(_error).ConfigureAwait(false);
 		}
 
 		return this;
 	}
 
 	/// <summary>
-	/// Returns a failed result if the provided predicate evaluates to true, using the specified error.
+	/// Returns an error if the specified condition is met.
 	/// </summary>
-	/// <param name="predicate">A function that takes the current value and returns a boolean indicating whether the condition for failure is met.</param>
-	/// <param name="error">The error to associate with the failure result if the predicate is true.</param>
+	/// <typeparam name="T">The type of the successful result in the input <see cref="Result{T}"/> instance.</typeparam>
+	/// <param name="predicate">The condition that determines whether a failure occurs.</param>
+	/// <param name="error">The error to return if the condition is met.</param>
 	/// <returns>
-	/// A new failed result if the predicate returns true.
-	/// Otherwise, the original result is returned unchanged.
+	/// A <see cref="Result{T}"/> containing the successful result or the specified error.
 	/// </returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Result<T> FailIf(Func<T, bool> predicate, Error error)
+	public Result<T> FailWhen(Func<T, bool> predicate, Error error)
 	{
 		if (_error is null && predicate(_value))
 		{
@@ -408,92 +565,15 @@ public readonly struct Result<T> : IResult
 	}
 
 	/// <summary>
-	/// Returns a failed result if the specified predicate evaluates to true; otherwise, returns the current result.
+	/// Asynchronously returns an error if the specified condition is met.
 	/// </summary>
-	/// <param name="predicate">A function that defines the failure condition based on the value.</param>
-	/// <param name="error">A function that generates the error to associate with the failure result.</param>
+	/// <typeparam name="T">The type of the successful result in the input <see cref="Result{T}"/> instance.</typeparam>
+	/// <param name="predicate">An asynchronous function that defines the condition to determine if a failure occurs.</param>
+	/// <param name="error">The error to return if the condition is met.</param>
 	/// <returns>
-	/// A new failed result if the predicate returns true.
-	/// Otherwise, the original result is returned unchanged.
+	/// A <see cref="Task{T}"/> that, when awaited, returns a <see cref="Result{T}"/> containing the successful result or the specified error.
 	/// </returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Result<T> FailIf(Func<T, bool> predicate, Func<Error> error)
-	{
-		if (_error is null && predicate(_value))
-		{
-			return Failure(error());
-		}
-
-		return this;
-	}
-
-	/// <summary>
-	/// Evaluates the result's value against a given predicate and returns a failure result if the predicate is met.
-	/// </summary>
-	/// <param name="predicate">A function that takes the value and returns true if the condition for failure is met.</param>
-	/// <param name="error">A function that generates an error when the predicate condition is met, using the current value.</param>
-	/// <returns>
-	/// A new failed result if the predicate returns true.
-	/// Otherwise, the original result is returned unchanged.
-	/// </returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Result<T> FailIf(Func<T, bool> predicate, Func<T, Error> error)
-	{
-		if (_error is null && predicate(_value))
-		{
-			return Failure(error(_value));
-		}
-
-		return this;
-	}
-
-	/// <summary>
-	/// Returns a failed result if the specified predicate evaluates to true for the value of a successful result,
-	/// using the error provided by the asynchronous error-generating function.
-	/// </summary>
-	/// <param name="predicate">A function that determines whether the result should fail based on the current value.</param>
-	/// <param name="error">An asynchronous function that returns the error to be associated with the failure.</param>
-	/// <returns>
-	/// A failed result with the provided error if the predicate evaluates to true;
-	/// otherwise, the current result.
-	/// </returns>
-	public async Task<Result<T>> FailIfAsync(Func<T, bool> predicate, Func<Task<Error>> error)
-	{
-		if (_error is null && predicate(_value))
-		{
-			return Failure(await error().ConfigureAwait(false));
-		}
-
-		return this;
-	}
-
-	/// <summary>
-	/// Asynchronously transforms the result into a failure if the provided predicate evaluates to true and produces an error.
-	/// </summary>
-	/// <param name="predicate">A function that determines whether the result should fail based on its value.</param>
-	/// <param name="error">An asynchronous function that generates an error if the predicate evaluates to true.</param>
-	/// <returns>
-	/// A task representing the asynchronous operation. The result will be a failure if the predicate is met and the error is produced,
-	/// otherwise, it will return the original result.
-	/// </returns>
-	public async Task<Result<T>> FailIfAsync(Func<T, bool> predicate, Func<T, Task<Error>> error)
-	{
-		if (_error is null && predicate(_value))
-		{
-			return Failure(await error(_value).ConfigureAwait(false));
-		}
-
-		return this;
-	}
-
-	/// <summary>
-	/// Asynchronously evaluates a predicate against the result's value and returns a failure result
-	/// with the specified error if the predicate evaluates to true.
-	/// </summary>
-	/// <param name="predicate">An asynchronous function that assesses the result's value and returns a boolean.</param>
-	/// <param name="error">The error to return if the predicate evaluates to true.</param>
-	/// <returns>A failed result with the provided error if the predicate evaluates to true; otherwise, the original result.</returns>
-	public async Task<Result<T>> FailIfAsync(Func<T, Task<bool>> predicate, Error error)
+	public async Task<Result<T>> FailWhenAsync(Func<T, Task<bool>> predicate, Error error)
 	{
 		if (_error is null)
 		{
@@ -508,19 +588,118 @@ public readonly struct Result<T> : IResult
 	}
 
 	/// <summary>
-	/// Asynchronously fails the result if the provided predicate evaluates to true.
+	/// Returns an error if the specified condition is met.
 	/// </summary>
-	/// <param name="predicate">A function to evaluate the condition that determines whether the result should fail.</param>
-	/// <param name="error">A function to produce the error if the predicate evaluates to true.</param>
-	/// <returns>A failed result with the provided error if the predicate evaluates to true; otherwise, the original result.</returns>
-	public async Task<Result<T>> FailIfAsync(Func<T, Task<bool>> predicate, Func<Error> error)
+	/// <typeparam name="T">The type of the successful result in the input <see cref="Result{T}"/> instance.</typeparam>
+	/// <param name="predicate">The condition that determines whether a failure occurs.</param>
+	/// <param name="errorFactory">The factory that produces an error to return if the condition is met.</param>
+	/// <returns>
+	/// A <see cref="Result{T}"/> containing the successful result or the produced error.
+	/// </returns>
+	public Result<T> FailWhenWith(Func<T, bool> predicate, Func<Error> errorFactory)
+	{
+		if (_error is null && predicate(_value))
+		{
+			return Failure(errorFactory());
+		}
+
+		return this;
+	}
+
+	/// <summary>
+	/// Returns an error if the specified condition is met.
+	/// </summary>
+	/// <typeparam name="T">The type of the successful result in the input <see cref="Result{T}"/> instance.</typeparam>
+	/// <param name="predicate">The condition that determines whether a failure occurs.</param>
+	/// <param name="errorFactory">The factory that maps a result value to an error to return if the condition is met.</param>
+	/// <returns>
+	/// A <see cref="Result{T}"/> containing the successful result or the produced error.
+	/// </returns>
+	public Result<T> FailWhenWith(Func<T, bool> predicate, Func<T, Error> errorFactory)
+	{
+		if (_error is null && predicate(_value))
+		{
+			return Failure(errorFactory(_value));
+		}
+
+		return this;
+	}
+
+	/// <summary>
+	/// Transforms the current <see cref="Result{T}"/> instance into a failure if the specified predicate returns true.
+	/// The error is generated asynchronously using the provided <paramref name="errorFactory"/> function.
+	/// </summary>
+	/// <typeparam name="T">The type of the successful result in the <see cref="Result{T}"/> instance.</typeparam>
+	/// <param name="predicate">
+	/// A predicate function to evaluate the current result. If the predicate returns true, the result is transformed into a failure.
+	/// </param>
+	/// <param name="errorFactory">
+	/// An asynchronous function that generates an <see cref="Error"/> if the predicate returns true.
+	/// </param>
+	/// <returns>
+	/// A <see cref="Task{T}"/> that, when awaited, returns a <see cref="Result{T}"/>.
+	/// If the predicate returns true, the task result contains a failure; otherwise, it contains the original result.
+	/// </returns>
+	public async Task<Result<T>> FailWhenWithAsync(Func<T, bool> predicate, Func<Task<Error>> errorFactory)
+	{
+		if (_error is null && predicate(_value))
+		{
+			return Failure(await errorFactory().ConfigureAwait(false));
+		}
+
+		return this;
+	}
+
+	/// <summary>
+	/// Transforms the current <see cref="Result{T}"/> instance into a failure if the specified predicate returns true.
+	/// The error is generated asynchronously using the provided <paramref name="errorFactory"/> function,
+	/// which takes the successful result as a parameter.
+	/// </summary>
+	/// <typeparam name="T">The type of the successful result in the <see cref="Result{T}"/> instance.</typeparam>
+	/// <param name="predicate">
+	/// A predicate function to evaluate the current result. If the predicate returns true, the result is transformed into a failure.
+	/// </param>
+	/// <param name="errorFactory">
+	/// An asynchronous function that generates an <see cref="Error"/> based on the successful result,
+	/// if the predicate returns true.
+	/// </param>
+	/// <returns>
+	/// A <see cref="Task{T}"/> that, when awaited, returns a <see cref="Result{T}"/>.
+	/// If the predicate returns true, the task result contains a failure; otherwise, it contains the original result.
+	/// </returns>
+	public async Task<Result<T>> FailWhenWithAsync(Func<T, bool> predicate, Func<T, Task<Error>> errorFactory)
+	{
+		if (_error is null && predicate(_value))
+		{
+			return Failure(await errorFactory(_value).ConfigureAwait(false));
+		}
+
+		return this;
+	}
+
+	/// <summary>
+	/// Transforms the current <see cref="Result{T}"/> instance into a failure if the specified asynchronous predicate returns true.
+	/// The error is generated using the provided <paramref name="errorFactory"/> function.
+	/// </summary>
+	/// <typeparam name="T">The type of the successful result in the <see cref="Result{T}"/> instance.</typeparam>
+	/// <param name="predicate">
+	/// An asynchronous predicate function to evaluate the current result. If it returns true, the result is transformed into a failure.
+	/// </param>
+	/// <param name="errorFactory">
+	/// A function that generates an <see cref="Error"/> if the predicate returns true.
+	/// </param>
+	/// <returns>
+	/// A <see cref="Task{T}"/> that, when awaited, returns a <see cref="Result{T}"/>.
+	/// If the predicate returns true, the task result contains a failure; otherwise, it contains the original result.
+	/// </returns>
+	public async Task<Result<T>> FailWhenWithAsync(Func<T, Task<bool>> predicate, Func<Error> errorFactory)
 	{
 		if (_error is null)
 		{
 			bool result = await predicate(_value).ConfigureAwait(false);
 			if (result)
 			{
-				return Failure(error());
+				return Failure(errorFactory());
 			}
 		}
 
@@ -528,19 +707,28 @@ public readonly struct Result<T> : IResult
 	}
 
 	/// <summary>
-	/// Asynchronously fails the result with the provided error if the specified predicate evaluates to true.
+	/// Transforms the current <see cref="Result{T}"/> instance into a failure if the specified asynchronous predicate returns true.
+	/// The error is generated using the provided <paramref name="errorFactory"/> function, which takes the successful result as a parameter.
 	/// </summary>
-	/// <param name="predicate">The asynchronous predicate function to evaluate the current result value.</param>
-	/// <param name="error">The function to generate an error based on the current result value.</param>
-	/// <returns>A failed result with the provided error if the predicate evaluates to true; otherwise, the original result.</returns>
-	public async Task<Result<T>> FailIfAsync(Func<T, Task<bool>> predicate, Func<T, Error> error)
+	/// <typeparam name="T">The type of the successful result in the <see cref="Result{T}"/> instance.</typeparam>
+	/// <param name="predicate">
+	/// An asynchronous predicate function to evaluate the current result. If it returns true, the result is transformed into a failure.
+	/// </param>
+	/// <param name="errorFactory">
+	/// A function that generates an <see cref="Error"/> based on the successful result, if the predicate returns true.
+	/// </param>
+	/// <returns>
+	/// A <see cref="Task{T}"/> that, when awaited, returns a <see cref="Result{T}"/>.
+	/// If the predicate returns true, the task result contains a failure; otherwise, it contains the original result.
+	/// </returns>
+	public async Task<Result<T>> FailWhenWithAsync(Func<T, Task<bool>> predicate, Func<T, Error> errorFactory)
 	{
 		if (_error is null)
 		{
 			bool result = await predicate(_value).ConfigureAwait(false);
 			if (result)
 			{
-				return Failure(error(_value));
+				return Failure(errorFactory(_value));
 			}
 		}
 
@@ -548,19 +736,28 @@ public readonly struct Result<T> : IResult
 	}
 
 	/// <summary>
-	/// Evaluates a predicate asynchronously on the result's value, and if it returns true, creates a failure result with the specified error.
+	/// Transforms the current <see cref="Result{T}"/> instance into a failure if the specified asynchronous predicate returns true.
+	/// The error is generated asynchronously using the provided <paramref name="errorFactory"/> function.
 	/// </summary>
-	/// <param name="predicate">An asynchronous function that evaluates a condition on the value of the result.</param>
-	/// <param name="error">An asynchronous function that provides the error to be used in case of failure.</param>
-	/// <returns>A failed result with the provided error if the predicate evaluates to true; otherwise, the original result.</returns>
-	public async Task<Result<T>> FailIfAsync(Func<T, Task<bool>> predicate, Func<Task<Error>> error)
+	/// <typeparam name="T">The type of the successful result in the <see cref="Result{T}"/> instance.</typeparam>
+	/// <param name="predicate">
+	/// An asynchronous predicate function to evaluate the current result. If it returns true, the result is transformed into a failure.
+	/// </param>
+	/// <param name="errorFactory">
+	/// An asynchronous function that generates an <see cref="Error"/> if the predicate returns true.
+	/// </param>
+	/// <returns>
+	/// A <see cref="Task{T}"/> that, when awaited, returns a <see cref="Result{T}"/>.
+	/// If the predicate returns true, the task result contains a failure; otherwise, it contains the original result.
+	/// </returns>
+	public async Task<Result<T>> FailWhenWithAsync(Func<T, Task<bool>> predicate, Func<Task<Error>> errorFactory)
 	{
 		if (_error is null)
 		{
 			bool result = await predicate(_value).ConfigureAwait(false);
 			if (result)
 			{
-				return Failure(await error().ConfigureAwait(false));
+				return Failure(await errorFactory().ConfigureAwait(false));
 			}
 		}
 
@@ -568,19 +765,30 @@ public readonly struct Result<T> : IResult
 	}
 
 	/// <summary>
-	/// Creates a failure result if the provided asynchronous predicate evaluates to true.
+	/// Transforms the current <see cref="Result{T}"/> instance into a failure if the specified asynchronous predicate returns true.
+	/// The error is generated asynchronously using the provided <paramref name="errorFactory"/> function,
+	/// which takes the successful result as a parameter.
 	/// </summary>
-	/// <param name="predicate">An asynchronous function that takes the current value and returns a boolean indicating whether the failure condition is met.</param>
-	/// <param name="error">An asynchronous function that takes the current value and returns the error to associate with the failure result.</param>
-	/// <returns>A failed result with the provided error if the predicate evaluates to true; otherwise, the original result.</returns>
-	public async Task<Result<T>> FailIfAsync(Func<T, Task<bool>> predicate, Func<T, Task<Error>> error)
+	/// <typeparam name="T">The type of the successful result in the <see cref="Result{T}"/> instance.</typeparam>
+	/// <param name="predicate">
+	/// An asynchronous predicate function to evaluate the current result. If it returns true, the result is transformed into a failure.
+	/// </param>
+	/// <param name="errorFactory">
+	/// An asynchronous function that generates an <see cref="Error"/> based on the successful result,
+	/// if the predicate returns true.
+	/// </param>
+	/// <returns>
+	/// A <see cref="Task{T}"/> that, when awaited, returns a <see cref="Result{T}"/>.
+	/// If the predicate returns true, the task result contains a failure; otherwise, it contains the original result.
+	/// </returns>
+	public async Task<Result<T>> FailWhenWithAsync(Func<T, Task<bool>> predicate, Func<T, Task<Error>> errorFactory)
 	{
 		if (_error is null)
 		{
 			bool result = await predicate(_value).ConfigureAwait(false);
 			if (result)
 			{
-				return Failure(await error(_value).ConfigureAwait(false));
+				return Failure(await errorFactory(_value).ConfigureAwait(false));
 			}
 		}
 
@@ -592,9 +800,10 @@ public readonly struct Result<T> : IResult
 	/// </summary>
 	/// <param name="map">The function to apply to the successful value.</param>
 	/// <returns>A new result with the transformed value if the original result was successful; otherwise, the original error.</returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Result<TResult> Select<TResult>(Func<T, TResult> map)
-		=> _error is null ? Result<TResult>.Success(map(_value)) : Result<TResult>.Failure(_error);
+	{
+		return _error is null ? Result<TResult>.Success(map(_value)) : Result<TResult>.Failure(_error);
+	}
 
 	/// <summary>
 	/// Projects each value of a result to another result and transforms the combined value using the specified projection function.
@@ -622,6 +831,40 @@ public readonly struct Result<T> : IResult
 
 		return project(_value, intermediate.Value);
 	}
+
+	#region Tasks
+	public async Task<Result<TProjection>> SelectMany<TResult, TProjection>(Func<T, Task<Result<TResult>>> bind, Func<T, TResult, TProjection> project)
+	{
+		if (_error is not null)
+		{
+			return Result<TProjection>.Failure(_error);
+		}
+
+		var intermediate = await bind(_value);
+		if (intermediate.IsFailure)
+		{
+			return Result<TProjection>.Failure(intermediate.Error);
+		}
+
+		return project(_value, intermediate.Value);
+	}
+
+	public async Task<Result<TProjection>> SelectMany<TResult, TProjection>(Func<T, Task<Result<TResult>>> bind, Func<T, TResult, Task<TProjection>> project)
+	{
+		if (_error is not null)
+		{
+			return Result<TProjection>.Failure(_error);
+		}
+
+		var intermediate = await bind(_value).ConfigureAwait(false);
+		if (intermediate.IsFailure)
+		{
+			return Result<TProjection>.Failure(intermediate.Error);
+		}
+
+		return await project(_value, intermediate.Value).ConfigureAwait(false);
+	}
+	#endregion
 }
 
 /// <summary>
@@ -636,14 +879,18 @@ public static class Result
 	/// </summary>
 	/// <param name="value">The value that represents the successful result.</param>
 	/// <returns>A successful result containing the given value.</returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Result<T> Success<T>(T value) => Result<T>.Success(value);
+	public static Result<T> Success<T>(T value)
+	{
+		return Result<T>.Success(value);
+	}
 
 	/// <summary>
 	/// Creates a failed result with the provided error.
 	/// </summary>
 	/// <param name="error">The error representing the reason for the failure.</param>
 	/// <returns>The created failed result.</returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Result<T> Failure<T>(Error error) => Result<T>.Failure(error);
+	public static Result<T> Failure<T>(Error error)
+	{
+		return Result<T>.Failure(error);
+	}
 }

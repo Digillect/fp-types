@@ -19,18 +19,36 @@ public readonly struct Unit : IEquatable<Unit>
 	public static readonly Unit Default = new();
 
 	/// <inheritdoc />
-	public override bool Equals(object? obj) => obj is Unit other && Equals(other);
+	public override bool Equals(object? obj)
+	{
+		return obj is Unit other && Equals(other);
+	}
 
 	/// <inheritdoc />
-	public override int GetHashCode() => 0;
+	public override int GetHashCode()
+	{
+		return 0;
+	}
 
 	/// <inheritdoc />
-	public override string ToString() => "()";
+	public override string ToString()
+	{
+		return "()";
+	}
 
 	/// <inheritdoc />
-	public bool Equals(Unit other) => true;
+	public bool Equals(Unit other)
+	{
+		return true;
+	}
 
-	public static bool operator ==(Unit _, Unit __) => true;
+	public static bool operator ==(Unit _, Unit __)
+	{
+		return true;
+	}
 
-	public static bool operator !=(Unit _, Unit __) => false;
+	public static bool operator !=(Unit _, Unit __)
+	{
+		return false;
+	}
 }

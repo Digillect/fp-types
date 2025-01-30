@@ -19,7 +19,10 @@ public readonly struct Option<T> : IEquatable<Option<T>>
 	/// <typeparam name="T">The type of the value to be wrapped in an option. Must be a non-nullable type.</typeparam>
 	/// <param name="value">The value to wrap. Must be non-null.</param>
 	/// <returns>An option instance containing the provided value.</returns>
-	public static Option<T> Some(T value) => new(value);
+	public static Option<T> Some(T value)
+	{
+		return new Option<T>(value);
+	}
 
 	private readonly T? _value;
 	private readonly bool _isSome;
@@ -47,7 +50,10 @@ public readonly struct Option<T> : IEquatable<Option<T>>
 	/// </summary>
 	/// <param name="other">The other <see cref="Option{T}"/> to compare with the current instance.</param>
 	/// <returns><c>true</c> if the current instance is equal to the other instance; otherwise, <c>false</c>.</returns>
-	public bool Equals(Option<T> other) => _isSome == other._isSome && EqualityComparer<T>.Default.Equals(_value!, other._value!);
+	public bool Equals(Option<T> other)
+	{
+		return _isSome == other._isSome && EqualityComparer<T>.Default.Equals(_value!, other._value!);
+	}
 
 	/// <inheritdoc />
 	public override bool Equals(object? obj)
@@ -61,24 +67,51 @@ public readonly struct Option<T> : IEquatable<Option<T>>
 	}
 
 	/// <inheritdoc />
-	public override int GetHashCode() => _isSome ? _value?.GetHashCode() ?? 0 : 0;
+	public override int GetHashCode()
+	{
+		return _isSome ? _value?.GetHashCode() ?? 0 : 0;
+	}
 
 	/// <inheritdoc />
-	public override string ToString() => _isSome ? $"Some({_value})" : "None";
+	public override string ToString()
+	{
+		return _isSome ? $"Some({_value})" : "None";
+	}
 
-	public static explicit operator T(Option<T> option) => option._isSome ? option._value! : throw new InvalidCastException("Option is not in a Some state");
+	public static explicit operator T(Option<T> option)
+	{
+		return option._isSome ? option._value! : throw new InvalidCastException("Option is not in a Some state");
+	}
 
-	public static implicit operator Option<T>(T? value) => value is not null ? Some(value) : None;
+	public static implicit operator Option<T>(T? value)
+	{
+		return value is not null ? Some(value) : None;
+	}
 
-	public static bool operator ==(Option<T> left, Option<T> right) => left.Equals(right);
+	public static bool operator ==(Option<T> left, Option<T> right)
+	{
+		return left.Equals(right);
+	}
 
-	public static bool operator !=(Option<T> left, Option<T> right) => !(left == right);
+	public static bool operator !=(Option<T> left, Option<T> right)
+	{
+		return !(left == right);
+	}
 
-	public static Option<T> operator |(Option<T> left, Option<T> right) => left._isSome ? left : right;
+	public static Option<T> operator |(Option<T> left, Option<T> right)
+	{
+		return left._isSome ? left : right;
+	}
 
-	public static bool operator true(Option<T> value) => value._isSome;
+	public static bool operator true(Option<T> value)
+	{
+		return value._isSome;
+	}
 
-	public static bool operator false(Option<T> value) => !value._isSome;
+	public static bool operator false(Option<T> value)
+	{
+		return !value._isSome;
+	}
 
 	/// <summary>
 	/// Transforms the value contained in the option using the specified mapping function.
@@ -90,10 +123,12 @@ public readonly struct Option<T> : IEquatable<Option<T>>
 	/// or an empty option (None) if the current option is in the None state.
 	/// </returns>
 	public Option<TResult> Map<TResult>(Func<T, TResult> map)
-		where TResult : notnull =>
-		_isSome
+		where TResult : notnull
+	{
+		return _isSome
 			? Option<TResult>.Some(map(_value!))
 			: default;
+	}
 
 	/// <summary>
 	/// Transforms the current option by applying a function that returns another option.
@@ -104,8 +139,10 @@ public readonly struct Option<T> : IEquatable<Option<T>>
 	/// <param name="bind">A function that maps the current option's value to another option value of type <typeparamref name="TResult"/>.</param>
 	/// <returns>An option containing the transformed value if the current option is 'Some', or 'None' if the current option is 'None'.</returns>
 	public Option<TResult> Bind<TResult>(Func<T, Option<TResult>> bind)
-		where TResult : notnull =>
-		_isSome ? bind(_value!) : default;
+		where TResult : notnull
+	{
+		return _isSome ? bind(_value!) : default;
+	}
 
 	/// <summary>
 	/// Projects the value of the current option using a specified binding and mapping function,
@@ -144,10 +181,12 @@ public readonly struct Option<T> : IEquatable<Option<T>>
 	/// <param name="ifSome">The function to execute if the option is in the 'Some' state, containing a value.</param>
 	/// <param name="ifNone">The function to execute if the option is in the 'None' state, containing no value.</param>
 	/// <returns>The result of the executed function, depending on the state of the option.</returns>
-	public TResult Match<TResult>(Func<T, TResult> ifSome, Func<TResult> ifNone) =>
-		_isSome
+	public TResult Match<TResult>(Func<T, TResult> ifSome, Func<TResult> ifNone)
+	{
+		return _isSome
 			? ifSome(_value!)
 			: ifNone();
+	}
 
 	/// <summary>
 	/// Matches the current state of the option to a specified result based on the presence or absence of a value.
@@ -156,10 +195,12 @@ public readonly struct Option<T> : IEquatable<Option<T>>
 	/// <param name="ifSome">A function to invoke when the option is in the 'Some' state.</param>
 	/// <param name="ifNone">A function to invoke when the option is in the 'None' state.</param>
 	/// <returns>The result of invoking the corresponding function, based on the current state of the option.</returns>
-	public TResult Match<TResult>(Func<T, TResult> ifSome, TResult ifNone) =>
-		_isSome
+	public TResult Match<TResult>(Func<T, TResult> ifSome, TResult ifNone)
+	{
+		return _isSome
 			? ifSome(_value!)
 			: ifNone;
+	}
 
 	/// <summary>
 	/// Evaluates the current <see cref="Option{T}"/> state and returns a value based on whether the option is in the 'Some' or 'None' state.
@@ -168,8 +209,10 @@ public readonly struct Option<T> : IEquatable<Option<T>>
 	/// <param name="ifSome">The value to return if the option is in the 'Some' state.</param>
 	/// <param name="ifNone">The value to return if the option is in the 'None' state.</param>
 	/// <returns>The value of <paramref name="ifSome"/> if the option is in the 'Some' state; otherwise, the value of <paramref name="ifNone"/>.</returns>
-	public TResult Match<TResult>(TResult ifSome, TResult ifNone) =>
-		_isSome
+	public TResult Match<TResult>(TResult ifSome, TResult ifNone)
+	{
+		return _isSome
 			? ifSome
 			: ifNone;
+	}
 }

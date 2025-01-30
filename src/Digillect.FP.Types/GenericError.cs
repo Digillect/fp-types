@@ -4,8 +4,13 @@ namespace Digillect.FP.Types;
 /// Represents a generic implementation of an error.
 /// </summary>
 /// <param name="message">The error message describing the generic error.</param>
-public sealed class GenericError(string message) : Error(message), IEquatable<GenericError>
+public sealed class GenericError(string message) : Error, IEquatable<GenericError>
 {
+	/// <summary>
+	/// The error message describing the generic error.
+	/// </summary>
+	public string Message { get; } = message;
+
 	/// <inheritdoc />
 	public bool Equals(GenericError? other)
 	{
@@ -15,13 +20,18 @@ public sealed class GenericError(string message) : Error(message), IEquatable<Ge
 	/// <inheritdoc />
 	public override bool Equals(object? obj)
 	{
-		return ReferenceEquals(this, obj) || obj is GenericError other && Equals(other);
+		return ReferenceEquals(this, obj) || (obj is GenericError other && Equals(other));
 	}
 
 	/// <inheritdoc />
 	public override int GetHashCode()
 	{
 		return Message.GetHashCode();
+	}
+
+	public override string ToString()
+	{
+		return Message;
 	}
 
 	/// <summary>

@@ -26,7 +26,10 @@ public static class Prelude
 	/// <typeparam name="T">The type of the value.</typeparam>
 	/// <returns>A successful result containing the specified value.</returns>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Result<T> Success<T>(T value) => Result.Success(value);
+	public static Result<T> Success<T>(T value)
+	{
+		return Result.Success(value);
+	}
 
 	/// <summary>
 	/// Returns a failed result containing the specified error.
@@ -35,7 +38,10 @@ public static class Prelude
 	/// <typeparam name="T">The type of the value associated with the result.</typeparam>
 	/// <returns>A failed result containing the specified error.</returns>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Result<T> Failure<T>(Error error) => Result.Failure<T>(error);
+	public static Result<T> Failure<T>(Error error)
+	{
+		return Result.Failure<T>(error);
+	}
 
 	/// <summary>
 	/// Creates an option containing the specified value.
@@ -46,7 +52,9 @@ public static class Prelude
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Option<T> Some<T>(T value)
 		where T : notnull
-		=> Option<T>.Some(value);
+	{
+		return Option<T>.Some(value);
+	}
 
 	/// <summary>
 	/// Creates an option that represents an optional value.
@@ -55,8 +63,10 @@ public static class Prelude
 	/// <typeparam name="T">The type of the optional value.</typeparam>
 	/// <returns>An option containing the specified value if it is not <c>null</c>, or a None option otherwise.</returns>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Option<T> Optional<T>(T? value) where T : notnull =>
-		value is not null
+	public static Option<T> Optional<T>(T? value) where T : notnull
+	{
+		return value is not null
 			? Option<T>.Some(value)
 			: Option<T>.None;
+	}
 }
