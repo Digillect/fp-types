@@ -86,7 +86,6 @@ public readonly struct Result<T> : IResult
 	/// <summary>
 	/// Transforms the successful result using the provided mapping function.
 	/// </summary>
-	/// <typeparam name="T">The type of the successful result in the input <see cref="Result{T}"/> instance.</typeparam>
 	/// <typeparam name="TResult">The type of the mapped result returned by the mapping function.</typeparam>
 	/// <param name="map">
 	/// A function that transforms the successful result into a value of type <typeparamref name="TResult" />.
@@ -102,7 +101,6 @@ public readonly struct Result<T> : IResult
 	/// <summary>
 	/// Asynchronously transforms the successful result using the provided asynchronous mapping function.
 	/// </summary>
-	/// <typeparam name="T">The type of the successful result in the input <see cref="Result{T}"/> instance.</typeparam>
 	/// <typeparam name="TResult">The type of the mapped result returned by the asynchronous mapping function.</typeparam>
 	/// <param name="map">
 	/// An asynchronous function that transforms the successful result into a value of type <typeparamref name="TResult" />.
@@ -125,7 +123,6 @@ public readonly struct Result<T> : IResult
 	/// <summary>
 	/// Chains the successful result to another operation that returns a <see cref="Result{TResult}"/> using the provided binding function.
 	/// </summary>
-	/// <typeparam name="T">The type of the successful result in the input <see cref="Result{T}"/> instance.</typeparam>
 	/// <typeparam name="TResult">The type of the result returned by the binding function.</typeparam>
 	/// <param name="bind">
 	/// A function that maps the successful result into a new <see cref="Result{TResult}"/>.
@@ -141,7 +138,6 @@ public readonly struct Result<T> : IResult
 	/// <summary>
 	/// Asynchronously chains the successful result to another operation that returns a <see cref="Result{TResult}"/> using the provided asynchronous binding function.
 	/// </summary>
-	/// <typeparam name="T">The type of the successful result in the input <see cref="Result{T}"/> instance.</typeparam>
 	/// <typeparam name="TResult">The type of the result returned by the binding function.</typeparam>
 	/// <param name="bind">
 	/// An asynchronous function that maps the successful result into a new <see cref="Result{TResult}"/>.
@@ -165,7 +161,6 @@ public readonly struct Result<T> : IResult
 	/// Performs a side effect using the successful result of the current <see cref="Result{T}" /> instance.
 	/// Does not modify the result.
 	/// </summary>
-	/// <typeparam name="T">The type of the successful result in the current <see cref="Result{T}" /> instance.</typeparam>
 	/// <param name="action">
 	/// An action to execute with the successful result.
 	/// This action cannot modify the original result.
@@ -187,7 +182,6 @@ public readonly struct Result<T> : IResult
 	/// Asynchronously performs a side effect using the successful result of the current <see cref="Result{T}" /> instance.
 	/// Does not modify the result.
 	/// </summary>
-	/// <typeparam name="T">The type of the successful result in the current <see cref="Result{T}" /> instance.</typeparam>
 	/// <param name="action">
 	/// An asynchronous action to execute with the successful result.
 	/// This action cannot modify the original result.
@@ -209,7 +203,6 @@ public readonly struct Result<T> : IResult
 	/// Asynchronously performs a side effect using the successful result of the current <see cref="Result{T}" /> instance.
 	/// Does not modify the result.
 	/// </summary>
-	/// <typeparam name="T">The type of the successful result in the current <see cref="Result{T}" /> instance.</typeparam>
 	/// <param name="action">
 	/// An asynchronous action to execute with the successful result.
 	/// This action cannot modify the original result.
@@ -230,7 +223,6 @@ public readonly struct Result<T> : IResult
 	/// <summary>
 	/// Provides an alternative value in case the current <see cref="Result{T}"/> instance contains an error.
 	/// </summary>
-	/// <typeparam name="T">The type of the successful result in the input <see cref="Result{T}"/> instance.</typeparam>
 	/// <param name="alternative">
 	/// A value to return as an alternative if the current instance contains an error.
 	/// </param>
@@ -245,7 +237,6 @@ public readonly struct Result<T> : IResult
 	/// <summary>
 	/// Provides a factory for alternative value in case the current <see cref="Result{T}"/> instance contains an error.
 	/// </summary>
-	/// <typeparam name="T">The type of the successful result in the input <see cref="Result{T}"/> instance.</typeparam>
 	/// <param name="alternativeFactory">
 	/// A factory for a value to return as an alternative if the current instance contains an error.
 	/// </param>
@@ -260,7 +251,6 @@ public readonly struct Result<T> : IResult
 	/// <summary>
 	/// Asynchronously provides an alternative value in case the current <see cref="Result{T}"/> instance contains an error.
 	/// </summary>
-	/// <typeparam name="T">The type of the successful result in the input <see cref="Result{T}"/> instance.</typeparam>
 	/// <param name="alternativeFactory">
 	/// An asynchronous factory that provides an alternative value if the current instance contains an error.
 	/// </param>
@@ -282,7 +272,6 @@ public readonly struct Result<T> : IResult
 	/// <summary>
 	/// Handles the current error by mapping it to an alternative value.
 	/// </summary>
-	/// <typeparam name="T">The type of the successful result in the input <see cref="Result{T}"/> instance.</typeparam>
 	/// <param name="recover">
 	/// A function that maps the error to an alternative value.
 	/// </param>
@@ -297,7 +286,6 @@ public readonly struct Result<T> : IResult
 	/// <summary>
 	/// Asynchronously handles the current error by mapping it to an alternative value.
 	/// </summary>
-	/// <typeparam name="T">The type of the successful result in the input <see cref="Result{T}"/> instance.</typeparam>
 	/// <param name="recover">
 	/// An asynchronous function that maps the error to an alternate <see cref="Result{T}"/> containing a success result.
 	/// </param>
@@ -319,7 +307,6 @@ public readonly struct Result<T> : IResult
 	/// <summary>
 	/// Handles the current error iby providing an alternate <see cref="Result{T}"/> object.
 	/// </summary>
-	/// <typeparam name="T">The type of the successful result in the <see cref="Result{T}"/> instance.</typeparam>
 	/// <param name="recover">
 	/// A function that maps the error to an alternate <see cref="Result{T}"/> object containing a new success value or a different error.
 	/// </param>
@@ -334,7 +321,6 @@ public readonly struct Result<T> : IResult
 	/// <summary>
 	/// Asynchronously handles the current error by providing an alternate <see cref="Result{T}"/> object.
 	/// </summary>
-	/// <typeparam name="T">The type of the successful result in the <see cref="Result{T}"/> instance.</typeparam>
 	/// <param name="recover">
 	/// An asynchronous function that maps the error to an alternate <see cref="Result{T}"/> object containing a new success value or a different error.
 	/// </param>
@@ -357,7 +343,6 @@ public readonly struct Result<T> : IResult
 	/// Performs a side effect when the current <see cref="Result{T}"/> instance contains an error.
 	/// Does not modify the result.
 	/// </summary>
-	/// <typeparam name="T">The type of the successful result in the current <see cref="Result{T}"/> instance.</typeparam>
 	/// <param name="action">
 	/// An action to execute when the instance contains an error. The action receives the error value as its parameter.
 	/// </param>
@@ -378,7 +363,6 @@ public readonly struct Result<T> : IResult
 	/// Asynchronously performs a side effect when the current <see cref="Result{T}"/> instance contains an error.
 	/// Does not modify the result.
 	/// </summary>
-	/// <typeparam name="T">The type of the successful result in the current <see cref="Result{T}"/> instance.</typeparam>
 	/// <param name="action">
 	/// An asynchronous action to execute when the instance contains an error.
 	/// </param>
@@ -399,7 +383,6 @@ public readonly struct Result<T> : IResult
 	/// Asynchronously performs a side effect when the current <see cref="Result{T}"/> instance contains an error.
 	/// Does not modify the result.
 	/// </summary>
-	/// <typeparam name="T">The type of the successful result in the current <see cref="Result{T}"/> instance.</typeparam>
 	/// <param name="action">
 	/// An asynchronous action to execute when the instance contains an error. The action receives the error value as its parameter.
 	/// </param>
@@ -420,7 +403,6 @@ public readonly struct Result<T> : IResult
 	/// Matches the current <see cref="Result{T}"/> instance to one of two specified functions: one for a successful result
 	/// and another for an error. Returns the result of the corresponding function.
 	/// </summary>
-	/// <typeparam name="T">The type of the successful result in the current <see cref="Result{T}"/> instance.</typeparam>
 	/// <typeparam name="TResult">The type of the value returned by the match functions.</typeparam>
 	/// <param name="onSuccess">
 	/// A function to execute if the instance contains a successful result.
@@ -442,7 +424,6 @@ public readonly struct Result<T> : IResult
 	/// Asynchronously matches the current <see cref="Result{T}"/> instance to one of two specified asynchronous functions:
 	/// one for a successful result and another for an error. Returns the result of the corresponding function.
 	/// </summary>
-	/// <typeparam name="T">The type of the successful result in the current <see cref="Result{T}"/> instance.</typeparam>
 	/// <typeparam name="TResult">The type of the value returned by the asynchronous match functions.</typeparam>
 	/// <param name="onSuccess">
 	/// An asynchronous function to execute if the instance contains a successful result.
@@ -465,7 +446,6 @@ public readonly struct Result<T> : IResult
 	/// Executes one of two specified actions depending on whether the current <see cref="Result{T}"/> instance
 	/// contains a success or an error.
 	/// </summary>
-	/// <typeparam name="T">The type of the successful result in the current <see cref="Result{T}"/> instance.</typeparam>
 	/// <param name="onSuccess">
 	/// An action to execute if the instance contains a successful result.
 	/// The action takes the success value as its parameter.
@@ -495,7 +475,6 @@ public readonly struct Result<T> : IResult
 	/// Asynchronously executes one of two specified actions depending on whether the current <see cref="Result{T}"/> instance
 	/// contains a success or an error.
 	/// </summary>
-	/// <typeparam name="T">The type of the successful result in the current <see cref="Result{T}"/> instance.</typeparam>
 	/// <param name="onSuccess">
 	/// An asynchronous action to execute if the instance contains a successful result.
 	/// The action takes the success value as its parameter.
@@ -528,7 +507,6 @@ public readonly struct Result<T> : IResult
 	/// <summary>
 	/// Returns an error if the specified condition is met.
 	/// </summary>
-	/// <typeparam name="T">The type of the successful result in the input <see cref="Result{T}"/> instance.</typeparam>
 	/// <param name="predicate">The condition that determines whether a failure occurs.</param>
 	/// <param name="error">The error to return if the condition is met.</param>
 	/// <returns>
@@ -547,7 +525,6 @@ public readonly struct Result<T> : IResult
 	/// <summary>
 	/// Asynchronously returns an error if the specified condition is met.
 	/// </summary>
-	/// <typeparam name="T">The type of the successful result in the input <see cref="Result{T}"/> instance.</typeparam>
 	/// <param name="predicate">An asynchronous function that defines the condition to determine if a failure occurs.</param>
 	/// <param name="error">The error to return if the condition is met.</param>
 	/// <returns>
@@ -570,7 +547,6 @@ public readonly struct Result<T> : IResult
 	/// <summary>
 	/// Returns an error if the specified condition is met.
 	/// </summary>
-	/// <typeparam name="T">The type of the successful result in the input <see cref="Result{T}"/> instance.</typeparam>
 	/// <param name="predicate">The condition that determines whether a failure occurs.</param>
 	/// <param name="errorFactory">The factory that produces an error to return if the condition is met.</param>
 	/// <returns>
@@ -589,7 +565,6 @@ public readonly struct Result<T> : IResult
 	/// <summary>
 	/// Returns an error if the specified condition is met.
 	/// </summary>
-	/// <typeparam name="T">The type of the successful result in the input <see cref="Result{T}"/> instance.</typeparam>
 	/// <param name="predicate">The condition that determines whether a failure occurs.</param>
 	/// <param name="errorFactory">The factory that maps a result value to an error to return if the condition is met.</param>
 	/// <returns>
@@ -609,7 +584,6 @@ public readonly struct Result<T> : IResult
 	/// Transforms the current <see cref="Result{T}"/> instance into a failure if the specified predicate returns true.
 	/// The error is generated asynchronously using the provided <paramref name="errorFactory"/> function.
 	/// </summary>
-	/// <typeparam name="T">The type of the successful result in the <see cref="Result{T}"/> instance.</typeparam>
 	/// <param name="predicate">
 	/// A predicate function to evaluate the current result. If the predicate returns true, the result is transformed into a failure.
 	/// </param>
@@ -635,7 +609,6 @@ public readonly struct Result<T> : IResult
 	/// The error is generated asynchronously using the provided <paramref name="errorFactory"/> function,
 	/// which takes the successful result as a parameter.
 	/// </summary>
-	/// <typeparam name="T">The type of the successful result in the <see cref="Result{T}"/> instance.</typeparam>
 	/// <param name="predicate">
 	/// A predicate function to evaluate the current result. If the predicate returns true, the result is transformed into a failure.
 	/// </param>
@@ -661,7 +634,6 @@ public readonly struct Result<T> : IResult
 	/// Transforms the current <see cref="Result{T}"/> instance into a failure if the specified asynchronous predicate returns true.
 	/// The error is generated using the provided <paramref name="errorFactory"/> function.
 	/// </summary>
-	/// <typeparam name="T">The type of the successful result in the <see cref="Result{T}"/> instance.</typeparam>
 	/// <param name="predicate">
 	/// An asynchronous predicate function to evaluate the current result. If it returns true, the result is transformed into a failure.
 	/// </param>
@@ -690,7 +662,6 @@ public readonly struct Result<T> : IResult
 	/// Transforms the current <see cref="Result{T}"/> instance into a failure if the specified asynchronous predicate returns true.
 	/// The error is generated using the provided <paramref name="errorFactory"/> function, which takes the successful result as a parameter.
 	/// </summary>
-	/// <typeparam name="T">The type of the successful result in the <see cref="Result{T}"/> instance.</typeparam>
 	/// <param name="predicate">
 	/// An asynchronous predicate function to evaluate the current result. If it returns true, the result is transformed into a failure.
 	/// </param>
@@ -719,7 +690,6 @@ public readonly struct Result<T> : IResult
 	/// Transforms the current <see cref="Result{T}"/> instance into a failure if the specified asynchronous predicate returns true.
 	/// The error is generated asynchronously using the provided <paramref name="errorFactory"/> function.
 	/// </summary>
-	/// <typeparam name="T">The type of the successful result in the <see cref="Result{T}"/> instance.</typeparam>
 	/// <param name="predicate">
 	/// An asynchronous predicate function to evaluate the current result. If it returns true, the result is transformed into a failure.
 	/// </param>
@@ -749,7 +719,6 @@ public readonly struct Result<T> : IResult
 	/// The error is generated asynchronously using the provided <paramref name="errorFactory"/> function,
 	/// which takes the successful result as a parameter.
 	/// </summary>
-	/// <typeparam name="T">The type of the successful result in the <see cref="Result{T}"/> instance.</typeparam>
 	/// <param name="predicate">
 	/// An asynchronous predicate function to evaluate the current result. If it returns true, the result is transformed into a failure.
 	/// </param>
@@ -786,16 +755,21 @@ public readonly struct Result<T> : IResult
 	}
 
 	/// <summary>
-	/// Projects each value of a result to another result and transforms the combined value using the specified projection function.
+	/// Projects the result value into a new <see cref="Result{T}"/> according to a projection function,
+	/// and then flattens the results into a final result.
 	/// </summary>
-	/// <typeparam name="TResult">The type of the intermediate result produced by the bind function.</typeparam>
-	/// <typeparam name="TProjection">The type of the final projected result.</typeparam>
-	/// <param name="bind">A function to transform the current value into a result of type <typeparamref name="TResult"/>.</param>
-	/// <param name="project">A function to transform the initial value and the result of <paramref name="bind"/> into the final projected value.</param>
+	/// <typeparam name="TResult">The type of the intermediate result.</typeparam>
+	/// <typeparam name="TProjection">The type of the final projection result.</typeparam>
+	/// <param name="bind">A function that transforms the value into an intermediate result.</param>
+	/// <param name="project">A projection function that combines the original value and intermediate result.</param>
 	/// <returns>
-	/// A new result containing the projected value if both the current and intermediate results are successful; otherwise,
-	/// a failed result with the appropriate error.
+	/// A result containing the projected value if both operations succeed;
+	/// otherwise, a result containing the error from the first failed operation.
 	/// </returns>
+	/// <remarks>
+	/// This method is part of the LINQ support for monadic operations over results.
+	/// </remarks>
+
 	public Result<TProjection> SelectMany<TResult, TProjection>(Func<T, Result<TResult>> bind, Func<T, TResult, TProjection> project)
 	{
 		if (_error is not null)
@@ -812,7 +786,21 @@ public readonly struct Result<T> : IResult
 		return project(_value, intermediate.Value);
 	}
 
-	#region Tasks
+	/// <summary>
+	/// Asynchronously projects the result value into a new <see cref="Result{T}"/> according to a projection function,
+	/// and then flattens the results into a final result.
+	/// </summary>
+	/// <typeparam name="TResult">The type of the intermediate result.</typeparam>
+	/// <typeparam name="TProjection">The type of the final projection result.</typeparam>
+	/// <param name="bind">An asynchronous function that transforms the value into an intermediate result.</param>
+	/// <param name="project">A projection function that combines the original value and intermediate result.</param>
+	/// <returns>
+	/// A task representing a result containing the projected value if both operations succeed;
+	/// otherwise, a result containing the error from the first failed operation.
+	/// </returns>
+	/// <remarks>
+	/// This method is part of the asynchronous LINQ support for monadic operations over results.
+	/// </remarks>
 	public async Task<Result<TProjection>> SelectMany<TResult, TProjection>(Func<T, Task<Result<TResult>>> bind, Func<T, TResult, TProjection> project)
 	{
 		if (_error is not null)
@@ -829,6 +817,22 @@ public readonly struct Result<T> : IResult
 		return project(_value, intermediate.Value);
 	}
 
+	/// <summary>
+	/// Asynchronously projects the result value into a new <see cref="Result{T}"/> according to a projection function,
+	/// and then asynchronously flattens the results into a final result.
+	/// </summary>
+	/// <typeparam name="TResult">The type of the intermediate result.</typeparam>
+	/// <typeparam name="TProjection">The type of the final projection result.</typeparam>
+	/// <param name="bind">An asynchronous function that transforms the value into an intermediate result.</param>
+	/// <param name="project">An asynchronous projection function that combines the original value and intermediate result.</param>
+	/// <returns>
+	/// A task representing a result containing the projected value if both operations succeed;
+	/// otherwise, a result containing the error from the first failed operation.
+	/// </returns>
+	/// <remarks>
+	/// This method is part of the asynchronous LINQ support for monadic operations over results.
+	/// Both binding and projection operations are performed asynchronously.
+	/// </remarks>
 	public async Task<Result<TProjection>> SelectMany<TResult, TProjection>(Func<T, Task<Result<TResult>>> bind, Func<T, TResult, Task<TProjection>> project)
 	{
 		if (_error is not null)
@@ -844,7 +848,6 @@ public readonly struct Result<T> : IResult
 
 		return await project(_value, intermediate.Value).ConfigureAwait(false);
 	}
-	#endregion
 }
 
 /// <summary>
