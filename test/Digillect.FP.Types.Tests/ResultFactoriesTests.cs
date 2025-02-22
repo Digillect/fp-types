@@ -37,7 +37,7 @@ public sealed class ResultFactoriesTests
 	[Test]
 	public async Task Prelude_Failure_method_creates_failed_result()
 	{
-		var result = Error<int>(Error.Generic("Error"));
+		var result = Err<int>(Error.Generic("Error"));
 
 		await Assert.That(result.IsSuccess).IsFalse();
 		await Assert.That(result.IsError).IsTrue();
