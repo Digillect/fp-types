@@ -72,6 +72,11 @@ jobs:
       - name: Package
         run: dotnet pack --no-build -c Release -o artifacts /p:Version="${{ steps.version.outputs.FullSemVer }}"
 
+      - name: Upload package to MyGet
+        if: steps.version.outputs.PreReleaseTag != '' && !github.event.act
+        run: dotnet nuget push "*.nupkg" -k ${{ secrets.MYGET_API_KEY }} -s https://www.myget.org/F/digillect/api/v3/index.json
+        working-directory: artifacts
+
       - name: Upload package to NuGet
         if: steps.version.outputs.PreReleaseTag == '' && !github.event.act
         run: dotnet nuget push "*.nupkg" -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
