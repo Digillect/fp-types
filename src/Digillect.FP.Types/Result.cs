@@ -9,36 +9,16 @@ public readonly struct Result<T> : IResult
 	private readonly T _value;
 	private readonly Error? _error;
 
-	private Result(T value)
+	internal Result(T value)
 	{
 		_value = value;
 		_error = null;
 	}
 
-	private Result(Error error)
+	internal Result(Error error)
 	{
 		_value = default!;
 		_error = error;
-	}
-
-	/// <summary>
-	/// Creates a successful result with the provided value.
-	/// </summary>
-	/// <param name="value">The value associated with the success result.</param>
-	/// <returns>The created successful result.</returns>
-	public static Result<T> Success(T value)
-	{
-		return new Result<T>(value);
-	}
-
-	/// <summary>
-	/// Creates a failed result with the provided error.
-	/// </summary>
-	/// <param name="error">The error associated with the failure result.</param>
-	/// <returns>The created failed result.</returns>
-	public static Result<T> Failure(Error error)
-	{
-		return new Result<T>(error);
 	}
 
 	/// <summary>
@@ -49,7 +29,7 @@ public readonly struct Result<T> : IResult
 	/// <summary>
 	/// Indicates whether the result represents a failed operation.
 	/// </summary>
-	public bool IsFailure => _error is not null;
+	public bool IsError => _error is not null;
 
 	/// <summary>
 	/// Gets the encapsulated value of a successful result or throws an exception if the result represents a failure.
@@ -100,7 +80,7 @@ public readonly struct Result<T> : IResult
 	/// </returns>
 	public static implicit operator Result<Unit>(Result<T> result)
 	{
-		return result.IsSuccess ? Result<Unit>.Success(Unit.Default) : Result<Unit>.Failure(result.Error);
+		return result.IsSuccess ? Result.Success(Unit.Default) : Result.Error<Unit>(result.Error);
 	}
 
 	/// <summary>
@@ -116,7 +96,7 @@ public readonly struct Result<T> : IResult
 	/// </returns>
 	public Result<TResult> Map<TResult>(Func<T, TResult> map)
 	{
-		return _error is not null ? Result<TResult>.Failure(_error) : Result<TResult>.Success(map(_value));
+		return _error is not null ? Result.Error<TResult>(_error) : Result.Success(map(_value));
 	}
 
 	/// <summary>
@@ -134,12 +114,12 @@ public readonly struct Result<T> : IResult
 	{
 		if (_error is not null)
 		{
-			return Result<TResult>.Failure(_error);
+			return Result.Error<TResult>(_error);
 		}
 
 		var result = await map(_value).ConfigureAwait(false);
 
-		return Result<TResult>.Success(result);
+		return Result.Success(result);
 	}
 
 	/// <summary>
@@ -155,7 +135,7 @@ public readonly struct Result<T> : IResult
 	/// </returns>
 	public Result<TResult> Bind<TResult>(Func<T, Result<TResult>> bind)
 	{
-		return _error is not null ? Result<TResult>.Failure(_error) : bind(_value);
+		return _error is not null ? Result.Error<TResult>(_error) : bind(_value);
 	}
 
 	/// <summary>
@@ -173,7 +153,7 @@ public readonly struct Result<T> : IResult
 	{
 		if (_error is not null)
 		{
-			return Result<TResult>.Failure(_error);
+			return Result.Error<TResult>(_error);
 		}
 
 		var result = await bind(_value).ConfigureAwait(false);
@@ -259,7 +239,7 @@ public readonly struct Result<T> : IResult
 	/// </returns>
 	public Result<T> OrElse(T alternative)
 	{
-		return _error is null ? this : Success(alternative);
+		return _error is null ? this : Result.Success(alternative);
 	}
 
 	/// <summary>
@@ -274,7 +254,7 @@ public readonly struct Result<T> : IResult
 	/// </returns>
 	public Result<T> OrElse(Func<T> alternativeFactory)
 	{
-		return _error is null ? this : Success(alternativeFactory());
+		return _error is null ? this : Result.Success(alternativeFactory());
 	}
 
 	/// <summary>
@@ -296,7 +276,7 @@ public readonly struct Result<T> : IResult
 
 		var value = await alternativeFactory();
 
-		return Success(value);
+		return Result.Success(value);
 	}
 
 	/// <summary>
@@ -311,7 +291,7 @@ public readonly struct Result<T> : IResult
 	/// </returns>
 	public Result<T> Recover(Func<Error, T> recover)
 	{
-		return _error is null ? this : Success(recover(_error));
+		return _error is null ? this : Result.Success(recover(_error));
 	}
 
 	/// <summary>
@@ -333,7 +313,7 @@ public readonly struct Result<T> : IResult
 
 		var result = await recover(_error).ConfigureAwait(false);
 
-		return Success(result);
+		return Result.Success(result);
 	}
 
 	/// <summary>
@@ -558,7 +538,7 @@ public readonly struct Result<T> : IResult
 	{
 		if (_error is null && predicate(_value))
 		{
-			return Failure(error);
+			return Result.Error<T>(error);
 		}
 
 		return this;
@@ -580,7 +560,7 @@ public readonly struct Result<T> : IResult
 			bool result = await predicate(_value).ConfigureAwait(false);
 			if (result)
 			{
-				return Failure(error);
+				return Result.Error<T>(error);
 			}
 		}
 
@@ -600,7 +580,7 @@ public readonly struct Result<T> : IResult
 	{
 		if (_error is null && predicate(_value))
 		{
-			return Failure(errorFactory());
+			return Result.Error<T>(errorFactory());
 		}
 
 		return this;
@@ -619,7 +599,7 @@ public readonly struct Result<T> : IResult
 	{
 		if (_error is null && predicate(_value))
 		{
-			return Failure(errorFactory(_value));
+			return Result.Error<T>(errorFactory(_value));
 		}
 
 		return this;
@@ -644,7 +624,7 @@ public readonly struct Result<T> : IResult
 	{
 		if (_error is null && predicate(_value))
 		{
-			return Failure(await errorFactory().ConfigureAwait(false));
+			return Result.Error<T>(await errorFactory().ConfigureAwait(false));
 		}
 
 		return this;
@@ -671,7 +651,7 @@ public readonly struct Result<T> : IResult
 	{
 		if (_error is null && predicate(_value))
 		{
-			return Failure(await errorFactory(_value).ConfigureAwait(false));
+			return Result.Error<T>(await errorFactory(_value).ConfigureAwait(false));
 		}
 
 		return this;
@@ -699,7 +679,7 @@ public readonly struct Result<T> : IResult
 			bool result = await predicate(_value).ConfigureAwait(false);
 			if (result)
 			{
-				return Failure(errorFactory());
+				return Result.Error<T>(errorFactory());
 			}
 		}
 
@@ -728,7 +708,7 @@ public readonly struct Result<T> : IResult
 			bool result = await predicate(_value).ConfigureAwait(false);
 			if (result)
 			{
-				return Failure(errorFactory(_value));
+				return Result.Error<T>(errorFactory(_value));
 			}
 		}
 
@@ -757,7 +737,7 @@ public readonly struct Result<T> : IResult
 			bool result = await predicate(_value).ConfigureAwait(false);
 			if (result)
 			{
-				return Failure(await errorFactory().ConfigureAwait(false));
+				return Result.Error<T>(await errorFactory().ConfigureAwait(false));
 			}
 		}
 
@@ -788,7 +768,7 @@ public readonly struct Result<T> : IResult
 			bool result = await predicate(_value).ConfigureAwait(false);
 			if (result)
 			{
-				return Failure(await errorFactory(_value).ConfigureAwait(false));
+				return Result.Error<T>(await errorFactory(_value).ConfigureAwait(false));
 			}
 		}
 
@@ -802,7 +782,7 @@ public readonly struct Result<T> : IResult
 	/// <returns>A new result with the transformed value if the original result was successful; otherwise, the original error.</returns>
 	public Result<TResult> Select<TResult>(Func<T, TResult> map)
 	{
-		return _error is null ? Result<TResult>.Success(map(_value)) : Result<TResult>.Failure(_error);
+		return _error is null ? Result.Success(map(_value)) : Result.Error<TResult>(_error);
 	}
 
 	/// <summary>
@@ -820,13 +800,13 @@ public readonly struct Result<T> : IResult
 	{
 		if (_error is not null)
 		{
-			return Result<TProjection>.Failure(_error);
+			return Result.Error<TProjection>(_error);
 		}
 
 		var intermediate = bind(_value);
-		if (intermediate.IsFailure)
+		if (intermediate.IsError)
 		{
-			return Result<TProjection>.Failure(intermediate.Error);
+			return Result.Error<TProjection>(intermediate.Error);
 		}
 
 		return project(_value, intermediate.Value);
@@ -837,13 +817,13 @@ public readonly struct Result<T> : IResult
 	{
 		if (_error is not null)
 		{
-			return Result<TProjection>.Failure(_error);
+			return Result.Error<TProjection>(_error);
 		}
 
 		var intermediate = await bind(_value);
-		if (intermediate.IsFailure)
+		if (intermediate.IsError)
 		{
-			return Result<TProjection>.Failure(intermediate.Error);
+			return Result.Error<TProjection>(intermediate.Error);
 		}
 
 		return project(_value, intermediate.Value);
@@ -853,13 +833,13 @@ public readonly struct Result<T> : IResult
 	{
 		if (_error is not null)
 		{
-			return Result<TProjection>.Failure(_error);
+			return Result.Error<TProjection>(_error);
 		}
 
 		var intermediate = await bind(_value).ConfigureAwait(false);
-		if (intermediate.IsFailure)
+		if (intermediate.IsError)
 		{
-			return Result<TProjection>.Failure(intermediate.Error);
+			return Result.Error<TProjection>(intermediate.Error);
 		}
 
 		return await project(_value, intermediate.Value).ConfigureAwait(false);
@@ -881,16 +861,16 @@ public static class Result
 	/// <returns>A successful result containing the given value.</returns>
 	public static Result<T> Success<T>(T value)
 	{
-		return Result<T>.Success(value);
+		return new Result<T>(value);
 	}
 
 	/// <summary>
-	/// Creates a failed result with the provided error.
+	/// Creates an error result with the provided error.
 	/// </summary>
 	/// <param name="error">The error representing the reason for the failure.</param>
 	/// <returns>The created failed result.</returns>
-	public static Result<T> Failure<T>(Error error)
+	public static Result<T> Error<T>(Error error)
 	{
-		return Result<T>.Failure(error);
+		return new Result<T>(error);
 	}
 }

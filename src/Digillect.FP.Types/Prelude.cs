@@ -38,9 +38,9 @@ public static class Prelude
 	/// <typeparam name="T">The type of the value associated with the result.</typeparam>
 	/// <returns>A failed result containing the specified error.</returns>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Result<T> Failure<T>(Error error)
+	public static Result<T> Error<T>(Error error)
 	{
-		return Result.Failure<T>(error);
+		return Result.Error<T>(error);
 	}
 
 	/// <summary>

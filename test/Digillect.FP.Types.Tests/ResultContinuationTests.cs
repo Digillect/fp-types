@@ -15,9 +15,9 @@ public sealed class ResultContinuationTests
 	[Test]
 	public async Task Map_does_not_execute_continuation_when_result_is_failed()
 	{
-		var result = Result.Failure<int>(Error.Generic("Error")).Map(x => x + 1);
+		var result = Result.Error<int>(Error.Generic("Error")).Map(x => x + 1);
 
-		await Assert.That(result.IsFailure).IsTrue();
+		await Assert.That(result.IsError).IsTrue();
 		await Assert.That(result.Error).IsEqualTo(Error.Generic("Error"));
 	}
 
@@ -34,9 +34,9 @@ public sealed class ResultContinuationTests
 	[Test]
 	public async Task Bind_does_not_execute_continuation_when_result_is_failed()
 	{
-		var result = Result.Failure<int>(Error.Generic("Error")).Bind(x => Result.Success(x + 1));
+		var result = Result.Error<int>(Error.Generic("Error")).Bind(x => Result.Success(x + 1));
 
-		await Assert.That(result.IsFailure).IsTrue();
+		await Assert.That(result.IsError).IsTrue();
 		await Assert.That(result.Error).IsEqualTo(Error.Generic("Error"));
 	}
 
@@ -65,9 +65,9 @@ public sealed class ResultContinuationTests
 	[Test]
 	public async Task MapAsync_does_not_execute_continuation_with_task_when_result_is_failed()
 	{
-		var result = await Result.Failure<int>(Error.Generic("Error")).MapAsync(x => Task.FromResult(x + 1));
+		var result = await Result.Error<int>(Error.Generic("Error")).MapAsync(x => Task.FromResult(x + 1));
 
-		await Assert.That(result.IsFailure).IsTrue();
+		await Assert.That(result.IsError).IsTrue();
 		await Assert.That(result.Error).IsEqualTo(Error.Generic("Error"));
 	}
 
@@ -83,9 +83,9 @@ public sealed class ResultContinuationTests
 	[Test]
 	public async Task BindAsync_does_not_execute_continuation_when_result_is_failed()
 	{
-		var result = await Result.Failure<int>(Error.Generic("Error")).BindAsync(x => Task.FromResult(Result.Success(x + 1)));
+		var result = await Result.Error<int>(Error.Generic("Error")).BindAsync(x => Task.FromResult(Result.Success(x + 1)));
 
-		await Assert.That(result.IsFailure).IsTrue();
+		await Assert.That(result.IsError).IsTrue();
 		await Assert.That(result.Error).IsEqualTo(Error.Generic("Error"));
 	}
 
@@ -107,7 +107,7 @@ public sealed class ResultContinuationTests
 	{
 		var result = Result.Success(1).FailWhen(x => x == 1, Error.Generic("Error"));
 
-		await Assert.That(result.IsFailure).IsTrue();
+		await Assert.That(result.IsError).IsTrue();
 		await Assert.That(result.Error).IsEqualTo(Error.Generic("Error"));
 	}
 
@@ -138,11 +138,11 @@ public sealed class ResultContinuationTests
 	{
 		var result =
 			from x1 in Result.Success(1)
-			from x2 in Result.Failure<int>(Error.Generic("Error"))
+			from x2 in Result.Error<int>(Error.Generic("Error"))
 			let x3 = x1 + x2
 			select x3;
 
-		await Assert.That(result.IsFailure).IsTrue();
+		await Assert.That(result.IsError).IsTrue();
 		await Assert.That(result.Error).IsEqualTo(Error.Generic("Error"));
 	}
 }

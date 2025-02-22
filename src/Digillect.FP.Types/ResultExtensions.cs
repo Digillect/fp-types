@@ -613,7 +613,7 @@ public static class ResultExtensions
 	public static Task<Result<T>> ToAsyncResult<T>(this T value)
 		where T : notnull
 	{
-		return Task.FromResult(Result<T>.Success(value));
+		return Task.FromResult(Result.Success(value));
 	}
 
 	/// <summary>
@@ -630,7 +630,7 @@ public static class ResultExtensions
 	public static Task<Result<T>> ToAsyncResult<T>(this T? value, Error notFoundError)
 		where T : notnull
 	{
-		return Task.FromResult(value is not null ? Result<T>.Success(value) : Result<T>.Failure(notFoundError));
+		return Task.FromResult(value is not null ? Result.Success(value) : Result.Error<T>(notFoundError));
 	}
 
 	/// <summary>
@@ -647,6 +647,6 @@ public static class ResultExtensions
 	public static Task<Result<T>> ToAsyncResult<T>(this T? value, Func<Error> notFoundError)
 		where T : notnull
 	{
-		return Task.FromResult(value is not null ? Result<T>.Success(value) : Result<T>.Failure(notFoundError()));
+		return Task.FromResult(value is not null ? Result.Success(value) : Result.Error<T>(notFoundError()));
 	}
 }

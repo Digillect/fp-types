@@ -15,7 +15,7 @@ public interface IResult
 	/// <summary>
 	/// Indicates whether the result represents a failed operation.
 	/// </summary>
-	bool IsFailure { get; }
+	bool IsError { get; }
 
 	/// <summary>
 	/// Gets the error associated with a failed result. Throws an exception if the result represents a success.

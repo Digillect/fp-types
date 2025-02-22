@@ -10,17 +10,17 @@ public sealed class ResultFactoriesTests
 		var result = Result.Success(1);
 
 		await Assert.That(result.IsSuccess).IsTrue();
-		await Assert.That(result.IsFailure).IsFalse();
+		await Assert.That(result.IsError).IsFalse();
 		await Assert.That(result.Value).IsEqualTo(1);
 	}
 
 	[Test]
 	public async Task Result_Failure_method_creates_failed_result()
 	{
-		var result = Result.Failure<int>(Error.Generic("Error"));
+		var result = Result.Error<int>(Error.Generic("Error"));
 
 		await Assert.That(result.IsSuccess).IsFalse();
-		await Assert.That(result.IsFailure).IsTrue();
+		await Assert.That(result.IsError).IsTrue();
 		await Assert.That(result.Error).IsEqualTo(Error.Generic("Error"));
 	}
 
@@ -30,17 +30,17 @@ public sealed class ResultFactoriesTests
 		var result = Success(1);
 
 		await Assert.That(result.IsSuccess).IsTrue();
-		await Assert.That(result.IsFailure).IsFalse();
+		await Assert.That(result.IsError).IsFalse();
 		await Assert.That(result.Value).IsEqualTo(1);
 	}
 
 	[Test]
 	public async Task Prelude_Failure_method_creates_failed_result()
 	{
-		var result = Failure<int>(Error.Generic("Error"));
+		var result = Error<int>(Error.Generic("Error"));
 
 		await Assert.That(result.IsSuccess).IsFalse();
-		await Assert.That(result.IsFailure).IsTrue();
+		await Assert.That(result.IsError).IsTrue();
 		await Assert.That(result.Error).IsEqualTo(Error.Generic("Error"));
 	}
 }
