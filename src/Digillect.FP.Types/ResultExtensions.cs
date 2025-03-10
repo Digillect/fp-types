@@ -649,4 +649,78 @@ public static class ResultExtensions
 	{
 		return Task.FromResult(value is not null ? Result.Success(value) : Result.Error<T>(notFoundError()));
 	}
+
+	/// <summary>
+	/// Transforms the success value of the current asynchronous <see cref="Result{T}"/> instance using the specified
+	/// binding function <paramref name="bind"/> and projection function <paramref name="project"/>.
+	/// </summary>
+	/// <typeparam name="T">The type of the success result in the original <see cref="Result{T}"/>.</typeparam>
+	/// <typeparam name="TResult">The type of the success result in the intermediate <see cref="Result{T}"/> after applying <paramref name="bind"/>.</typeparam>
+	/// <typeparam name="TProjection">The type of the success result in the resultant <see cref="Result{TProjection}"/> after applying <paramref name="project"/>.</typeparam>
+	/// <param name="resultTask">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
+	/// <param name="bind">The function to transform the success value into an intermediate <see cref="Result{T}"/> asynchronously.</param>
+	/// <param name="project">The function to combine the original value and the intermediate result into the final projection asynchronously.</param>
+	/// <returns>
+	/// A <see cref="Task{T}"/> that, when awaited, evaluates to a new <see cref="Result{TProjection}"/> containing
+	/// the projected value if both the original and intermediate results are successful; otherwise, the first encountered error is returned.
+	/// </returns>
+	public static async Task<Result<TProjection>> SelectMany<T, TResult, TProjection>(
+		this Task<Result<T>> resultTask,
+		Func<T, Task<Result<TResult>>> bind,
+		Func<T, TResult, Task<TProjection>> project)
+	{
+		var result = await resultTask.ConfigureAwait(false);
+
+		if (result.IsError)
+		{
+			return Result.Error<TProjection>(result.Error);
+		}
+
+		var intermediate = await bind(result.Value).ConfigureAwait(false);
+		if (intermediate.IsError)
+		{
+			return Result.Error<TProjection>(intermediate.Error);
+		}
+
+		return await project(result.Value, intermediate.Value).ConfigureAwait(false);
+	}
+
+	/// <summary>
+	/// Combines the success value of the current asynchronous <see cref="Result{T}"/> instance with the success value
+	/// of another asynchronous operation using the specified binding function <paramref name="bind"/> and the projection
+	/// function <paramref name="project"/>.
+	/// </summary>
+	/// <typeparam name="T">The type of the success result in the original <see cref="Result{T}"/>.</typeparam>
+	/// <typeparam name="TResult">The type of the success result produced by the binding function.</typeparam>
+	/// <typeparam name="TProjection">The type of the success result in the resultant <see cref="Result{TProjection}"/>
+	/// after applying the projection function.</typeparam>
+	/// <param name="resultTask">The asynchronous <see cref="Task{T}"/> that represents the current <see cref="Result{T}"/>.</param>
+	/// <param name="bind">The binding function that returns a new asynchronous <see cref="Result{TResult}"/>
+	/// based on the success value of the current result.</param>
+	/// <param name="project">The projection function that combines the success value of the current result with
+	/// the success value of the intermediate result to produce the final result.</param>
+	/// <returns>
+	/// A <see cref="Task{T}"/> that, when awaited, evaluates to a <see cref="Result{TProjection}"/> containing
+	/// the projected value if all operations are successful; otherwise, the original or intermediate error is returned.
+	/// </returns>
+	public static async Task<Result<TProjection>> SelectMany<T, TResult, TProjection>(
+		this Task<Result<T>> resultTask,
+		Func<T, Task<Result<TResult>>> bind,
+		Func<T, TResult, TProjection> project)
+	{
+		var result = await resultTask.ConfigureAwait(false);
+
+		if (result.IsError)
+		{
+			return Result.Error<TProjection>(result.Error);
+		}
+
+		var intermediate = await bind(result.Value).ConfigureAwait(false);
+		if (intermediate.IsError)
+		{
+			return Result.Error<TProjection>(intermediate.Error);
+		}
+
+		return project(result.Value, intermediate.Value);
+	}
 }
