@@ -7,6 +7,32 @@
 public static class ResultExtensions
 {
 	/// <summary>
+	/// Extracts the underlying success value from the current <see cref="Result{T}"/> instance.
+	/// </summary>
+	/// <typeparam name="T">The type of the success result contained in the <see cref="Result{T}"/>.</typeparam>
+	/// <param name="result">The current <see cref="Result{T}"/> instance.</param>
+	/// <returns>
+	/// The success value of the <see cref="Result{T}"/> if it is successful; otherwise, an exception is thrown.
+	/// </returns>
+	public static T Unwrap<T>(this Result<T> result) => result.Value;
+
+	/// <summary>
+	/// Extracts the underlying success value from the current <see cref="Task{T}"/> instance.
+	/// </summary>
+	/// <typeparam name="T">The type of the success result contained in the <see cref="Result{T}"/>.</typeparam>
+	/// <param name="resultTask">The current <see cref="Task{T}"/> instance.</param>
+	/// <returns>
+	/// A task that represents the asynchronous operation,
+	/// containing the success value of the <see cref="Result{T}"/> if it is successful; otherwise, an exception is thrown.
+	/// </returns>
+	public static async Task<T> Unwrap<T>(this Task<Result<T>> resultTask)
+	{
+		var result = await resultTask.ConfigureAwait(false);
+
+		return result.Unwrap();
+	}
+
+	/// <summary>
 	/// Transforms the success value of the current asynchronous <see cref="Result{T}"/> instance using the specified
 	/// mapping function <paramref name="map"/>.
 	/// </summary>
