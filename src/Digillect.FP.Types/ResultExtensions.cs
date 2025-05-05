@@ -305,11 +305,11 @@ public static class ResultExtensions
 	/// <returns>
 	/// A <see cref="Task"/> that, when awaited, evaluates to the current <see cref="Result{T}"/> instance, unchanged.
 	/// </returns>
-	public static async Task<Result<T>> OnFailure<T>(this Task<Result<T>> result, Action<Error> action)
+	public static async Task<Result<T>> OnError<T>(this Task<Result<T>> result, Action<Error> action)
 	{
 		var awaitedResult = await result.ConfigureAwait(false);
 
-		return awaitedResult.OnFailure(action);
+		return awaitedResult.OnError(action);
 	}
 
 	/// <summary>
@@ -322,11 +322,43 @@ public static class ResultExtensions
 	/// <returns>
 	/// A <see cref="Task"/> that, when awaited, evaluates to the current <see cref="Result{T}"/> instance, unchanged.
 	/// </returns>
-	public static async Task<Result<T>> OnFailureAsync<T>(this Task<Result<T>> result, Func<Error, Task> action)
+	public static async Task<Result<T>> OnErrorAsync<T>(this Task<Result<T>> result, Func<Error, Task> action)
 	{
 		var awaitedResult = await result.ConfigureAwait(false);
 
-		return await awaitedResult.OnFailureAsync(action).ConfigureAwait(false);
+		return await awaitedResult.OnErrorAsync(action).ConfigureAwait(false);
+	}
+
+	/// <summary>
+	/// Handles an error of the specified type if the result contains an error of that type.
+	/// </summary>
+	/// <typeparam name="T">The type of the result value.</typeparam>
+	/// <typeparam name="TError">The type of error to handle.</typeparam>
+	/// <param name="result">The task returning the result to process.</param>
+	/// <param name="handler">The handler for the specified error type.</param>
+	/// <returns>A task returning the original result.</returns>
+	public static async Task<Result<T>> OnErrorOfType<T, TError>(this Task<Result<T>> result, Action<TError> handler)
+		where TError : Error
+	{
+		var awaitedResult = await result.ConfigureAwait(false);
+
+		return awaitedResult.OnErrorOfType(handler);
+	}
+
+	/// <summary>
+	/// Handles an error of the specified type if the result contains an error of that type.
+	/// </summary>
+	/// <typeparam name="T">The type of the result value.</typeparam>
+	/// <typeparam name="TError">The type of error to handle.</typeparam>
+	/// <param name="result">The task returning the result to process.</param>
+	/// <param name="handler">The handler for the specified error type.</param>
+	/// <returns>A task returning the original result.</returns>
+	public static async Task<Result<T>> OnErrorOfTypeAsync<T, TError>(this Task<Result<T>> result, Func<TError, Task> handler)
+		where TError : Error
+	{
+		var awaitedResult = await result.ConfigureAwait(false);
+
+		return await awaitedResult.OnErrorOfTypeAsync(handler).ConfigureAwait(false);
 	}
 
 	/// <summary>

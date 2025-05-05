@@ -349,11 +349,45 @@ public readonly struct Result<T> : IResult
 	/// <returns>
 	/// The original <see cref="Result{T}"/> instance, unchanged.
 	/// </returns>
-	public Result<T> OnFailure(Action<Error> action)
+	public Result<T> OnError(Action<Error> action)
 	{
 		if (_error is not null)
 		{
 			action(_error);
+		}
+
+		return this;
+	}
+
+	/// <summary>
+	/// Handles an error of the specified type if the result contains an error of that type.
+	/// </summary>
+	/// <typeparam name="TError">Type of error to handle.</typeparam>
+	/// <param name="handler">Handler for the specified error type.</param>
+	/// <returns>The original result.</returns>
+	public Result<T> OnErrorOfType<TError>(Action<TError> handler)
+		where TError : Error
+	{
+		if (_error is TError specificError)
+		{
+			handler(specificError);
+		}
+
+		return this;
+	}
+
+	/// <summary>
+	/// Handles an error of the specified type if the result contains an error of that type.
+	/// </summary>
+	/// <typeparam name="TError">Type of error to handle.</typeparam>
+	/// <param name="handler">Handler for the specified error type.</param>
+	/// <returns>The original result.</returns>
+	public async Task<Result<T>> OnErrorOfTypeAsync<TError>(Func<TError, Task> handler)
+		where TError : Error
+	{
+		if (_error is TError specificError)
+		{
+			await handler(specificError);
 		}
 
 		return this;
@@ -369,7 +403,7 @@ public readonly struct Result<T> : IResult
 	/// <returns>
 	/// A <see cref="Task{T}"/> that, when awaited, returns the original <see cref="Result{T}"/> instance, unchanged.
 	/// </returns>
-	public async Task<Result<T>> OnFailureAsync(Func<Task> action)
+	public async Task<Result<T>> OnErrorAsync(Func<Task> action)
 	{
 		if (_error is not null)
 		{
@@ -389,7 +423,7 @@ public readonly struct Result<T> : IResult
 	/// <returns>
 	/// A <see cref="Task{T}"/> that, when awaited, returns the original <see cref="Result{T}"/> instance, unchanged.
 	/// </returns>
-	public async Task<Result<T>> OnFailureAsync(Func<Error, Task> action)
+	public async Task<Result<T>> OnErrorAsync(Func<Error, Task> action)
 	{
 		if (_error is not null)
 		{
