@@ -72,3 +72,6 @@ __MACOSX/
 
 # Verify Snapshot Testing
 *.received.*
+
+# AI
+.claude/settings.local.json
