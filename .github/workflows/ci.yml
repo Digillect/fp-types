@@ -36,13 +36,13 @@ jobs:
         run: dotnet --info
 
       - name: Install GitVersion
-        uses: gittools/actions/gitversion/setup@v3.0.0
+        uses: gittools/actions/gitversion/setup@v4.2.0
         with:
           versionSpec: 6.5.x
 
       - name: Determine Version
         id: version
-        uses: gittools/actions/gitversion/execute@v3.0.0
+        uses: gittools/actions/gitversion/execute@v4.2.0
         with:
           useConfigFile: true
 
