@@ -5,6 +5,8 @@ strategies:
   - Mainline
   - Fallback
 
+commit-message-incrementing: Enabled
+
 branches:
   main:
     regex: ^main$
@@ -13,11 +15,9 @@ branches:
 
   feature:
     regex: ^feature[/-]
-    increment: Minor
+    increment: Patch
     is-release-branch: false
     label: alpha
 
 ignore:
   sha: []
-
-commit-message-incrementing: Enabled

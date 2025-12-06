@@ -70,9 +70,6 @@ jobs:
       - name: Package
         run: dotnet pack --no-build -c Release -o artifacts /p:Version="${{ steps.version.outputs.FullSemVer }}"
 
-      # ------------------------------------------------------
-      # PRE-RELEASE PACKAGES (ALPHA) — ONLY WHEN PR EXISTS
-      # ------------------------------------------------------
       - name: Upload package to MyGet (only in PR)
         if: |
           github.event_name == 'pull_request' &&
@@ -81,9 +78,6 @@ jobs:
         run: dotnet nuget push "*.nupkg" -k ${{ secrets.MYGET_API_KEY }} -s https://www.myget.org/F/digillect/api/v3/index.json
         working-directory: artifacts
 
-      # ------------------------------------------------------
-      # RELEASE PACKAGES — ONLY WHEN PUSH TO MAIN
-      # ------------------------------------------------------
       - name: Upload package to NuGet (only push to main)
         if: |
           github.event_name == 'push' &&
@@ -93,26 +87,6 @@ jobs:
         run: dotnet nuget push "*.nupkg" -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
         working-directory: artifacts
 
-      # ---------------------------------------------
-      # CREATE TAG FOR RELEASE
-      # ---------------------------------------------
-      - name: Create Git Tag
-        if: |
-          github.event_name == 'push' &&
-          github.ref == 'refs/heads/main' &&
-          steps.version.outputs.PreReleaseTag == '' &&
-          !github.event.act
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-
-          TAG="v${{ steps.version.outputs.FullSemVer }}"
-          git tag $TAG
-          git push origin $TAG
-
-      # ---------------------------------------------
-      # CREATE GITHUB RELEASE
-      # ---------------------------------------------
       - name: Create GitHub Release
         if: |
           github.event_name == 'push' &&
