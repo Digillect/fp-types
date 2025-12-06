@@ -24,11 +24,11 @@ branches:
     label: alpha
 
   pull-request:
-    regex: ^(pull|pull\-requests|pr)[/-]
+    regex: ^(pull|pull\-requests|pr)[/-](?<Number>\d+)
     increment: Patch  # Default для коммитов без conventional prefix
     is-release-branch: false
     track-merge-target: true
-    label: pr
+    label: pr-{Number}
 
 ignore:
   sha: []
