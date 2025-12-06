@@ -36,15 +36,13 @@ jobs:
         run: dotnet --info
 
       - name: Install GitVersion
-        uses: gittools/actions/gitversion/setup@v3.0.0
+        uses: gittools/actions/gitversion/setup@v4.2.0
         with:
-          versionSpec: 6.0.x
+          versionSpec: 6.5.x
 
       - name: Determine Version
         id: version
-        uses: gittools/actions/gitversion/execute@v3.0.0
-        with:
-          useConfigFile: true
+        uses: gittools/actions/gitversion/execute@v4.2.0
 
       - name: Install dependencies
         run: dotnet restore
@@ -88,18 +86,18 @@ jobs:
         run: dotnet nuget push "*.nupkg" -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
         working-directory: artifacts
 
-      - name: Create GitHub Release
-        if: |
-          github.event_name == 'push' &&
-          github.ref == 'refs/heads/main' &&
-          steps.version.outputs.PreReleaseTag == '' &&
-          !github.event.act
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ steps.version.outputs.FullSemVer }}
-          name: Release ${{ steps.version.outputs.FullSemVer }}
-          body: |
-            ## Changes in this release
-            ${{ steps.version.outputs.Changelog }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#      - name: Create GitHub Release
+#        if: |
+#          github.event_name == 'push' &&
+#          github.ref == 'refs/heads/main' &&
+#          steps.version.outputs.PreReleaseTag == '' &&
+#          !github.event.act
+#        uses: softprops/action-gh-release@v2
+#        with:
+#          tag_name: v${{ steps.version.outputs.FullSemVer }}
+#          name: Release ${{ steps.version.outputs.FullSemVer }}
+#          body: |
+#            ## Changes in this release
+#            ${{ steps.version.outputs.Changelog }}
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
