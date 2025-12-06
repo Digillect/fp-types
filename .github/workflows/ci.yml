@@ -8,8 +8,6 @@ on:
   push:
     branches:
       - main
-    tags:
-      - 'v*'
   pull_request:
     branches:
       - main
@@ -72,12 +70,61 @@ jobs:
       - name: Package
         run: dotnet pack --no-build -c Release -o artifacts /p:Version="${{ steps.version.outputs.FullSemVer }}"
 
-      - name: Upload package to MyGet
-        if: steps.version.outputs.PreReleaseTag != '' && !github.event.act
+      # ------------------------------------------------------
+      # PRE-RELEASE PACKAGES (ALPHA) — ONLY WHEN PR EXISTS
+      # ------------------------------------------------------
+      - name: Upload package to MyGet (only in PR)
+        if: |
+          github.event_name == 'pull_request' &&
+          steps.version.outputs.PreReleaseTag != '' &&
+          !github.event.act
         run: dotnet nuget push "*.nupkg" -k ${{ secrets.MYGET_API_KEY }} -s https://www.myget.org/F/digillect/api/v3/index.json
         working-directory: artifacts
 
-      - name: Upload package to NuGet
-        if: steps.version.outputs.PreReleaseTag == '' && !github.event.act
+      # ------------------------------------------------------
+      # RELEASE PACKAGES — ONLY WHEN PUSH TO MAIN
+      # ------------------------------------------------------
+      - name: Upload package to NuGet (only push to main)
+        if: |
+          github.event_name == 'push' &&
+          github.ref == 'refs/heads/main' &&
+          steps.version.outputs.PreReleaseTag == '' &&
+          !github.event.act
         run: dotnet nuget push "*.nupkg" -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json
         working-directory: artifacts
+
+      # ---------------------------------------------
+      # CREATE TAG FOR RELEASE
+      # ---------------------------------------------
+      - name: Create Git Tag
+        if: |
+          github.event_name == 'push' &&
+          github.ref == 'refs/heads/main' &&
+          steps.version.outputs.PreReleaseTag == '' &&
+          !github.event.act
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          TAG="v${{ steps.version.outputs.FullSemVer }}"
+          git tag $TAG
+          git push origin $TAG
+
+      # ---------------------------------------------
+      # CREATE GITHUB RELEASE
+      # ---------------------------------------------
+      - name: Create GitHub Release
+        if: |
+          github.event_name == 'push' &&
+          github.ref == 'refs/heads/main' &&
+          steps.version.outputs.PreReleaseTag == '' &&
+          !github.event.act
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.FullSemVer }}
+          name: Release ${{ steps.version.outputs.FullSemVer }}
+          body: |
+            ## Changes in this release
+            ${{ steps.version.outputs.Changelog }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
