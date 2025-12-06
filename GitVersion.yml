@@ -13,8 +13,10 @@ no-bump-message: '\+semver:\s?none'
 branches:
   main:
     regex: ^main$
+    mode: ContinuousDeployment  # Для main используем ContinuousDeployment режим
     increment: Patch  # Default для коммитов без conventional prefix
     is-release-branch: true
+    label: ''  # Пустой label означает отсутствие pre-release label
 
   feature:
     regex: ^feature[/-]
