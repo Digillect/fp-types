@@ -17,7 +17,15 @@ branches:
     regex: ^feature[/-]
     increment: Patch
     is-release-branch: false
+    track-merge-target: true
     label: alpha
+
+  pull-request:
+    regex: ^(pull|pull\-requests|pr)[\/-](?<Number>\d*)
+    increment: Inherit
+    is-release-branch: false
+    track-merge-target: true
+    label: pr-{Number}
 
 ignore:
   sha: []
