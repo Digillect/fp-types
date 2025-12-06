@@ -1,28 +1,31 @@
-mode: ContinuousDeployment
-strategies:
-  - MergeMessage
-  - TaggedCommit
-  - Mainline
-  - Fallback
+# Используем ContinuousDelivery режим
+mode: ContinuousDelivery
 
+# Включить версионирование на основе commit messages (conventional commits)
 commit-message-incrementing: Enabled
+
+# Настройка распознавания conventional commits
+major-version-bump-message: '\+semver:\s?(breaking|major)|^(feat|fix)!:|BREAKING\s+CHANGE:'
+minor-version-bump-message: '\+semver:\s?(feature|minor)|^feat(\(.+\))?:'
+patch-version-bump-message: '\+semver:\s?(fix|patch)|^fix(\(.+\))?:'
+no-bump-message: '\+semver:\s?none'
 
 branches:
   main:
     regex: ^main$
-    increment: Patch
+    increment: Patch  # Default для коммитов без conventional prefix
     is-release-branch: true
 
   feature:
     regex: ^feature[/-]
-    increment: Patch
+    increment: Patch  # Default для коммитов без conventional prefix
     is-release-branch: false
     track-merge-target: true
     label: alpha
 
   pull-request:
-    regex: ^(pull|pull\-requests|pr)[\/-](?<Number>\d*)
-    increment: Inherit
+    regex: ^(pull|pull\-requests|pr)[/-]
+    increment: Patch  # Default для коммитов без conventional prefix
     is-release-branch: false
     track-merge-target: true
     label: pr-{Number}
