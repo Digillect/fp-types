@@ -28,7 +28,7 @@ branches:
     increment: Patch  # Default для коммитов без conventional prefix
     is-release-branch: false
     track-merge-target: true
-    label: pr-{Number}
+    label: pr
 
 ignore:
   sha: []
