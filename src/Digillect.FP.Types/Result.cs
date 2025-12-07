@@ -121,6 +121,23 @@ public readonly struct Result<T> : IResult
 	}
 
 	/// <summary>
+	/// Converts the error of the current result into a new error using the specified mapping function.
+	/// </summary>
+	/// <param name="mapError">A function to transform the current error into a new error.</param>
+	/// <returns>A result with the current value and the transformed error.</returns>
+	public Result<T> MapError(Func<Error, Error> mapError)
+	{
+		if (_error is null)
+		{
+			return this;
+		}
+
+		var error = mapError(_error);
+
+		return Result.Error<T>(error);
+	}
+
+	/// <summary>
 	/// Chains the successful result to another operation that returns a <see cref="Result{TResult}"/> using the provided binding function.
 	/// </summary>
 	/// <typeparam name="TResult">The type of the result returned by the binding function.</typeparam>
