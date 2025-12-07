@@ -54,6 +54,21 @@ public static class TaskResultExtensions
 	}
 
 	/// <summary>
+	/// Maps an error from a failed <see cref="Result{T}"/> into a new <see cref="Result{T}"/> with the transformed error value.
+	/// </summary>
+	/// <typeparam name="T">The type of the value contained in the original result.</typeparam>
+	/// <param name="result">The original result to map the error from.</param>
+	/// <param name="mapError">A function to transform the error from the original result to the new error type.</param>
+	/// <returns>
+	/// A new <see cref="Result{T}"/> that contains either the original success value or the transformed error.
+	/// </returns>
+	public static async Task<Result<T>> MapError<T>(this Task<Result<T>> result, Func<Error, Error> mapError)
+	{
+		var awaitedResult = await result.ConfigureAwait(false);
+		return awaitedResult.MapError(mapError);
+	}
+
+	/// <summary>
 	/// Transforms the success value of the current asynchronous <see cref="Result{T}"/> instance using the specified
 	/// asynchronous mapping function <paramref name="map"/>.
 	/// </summary>
