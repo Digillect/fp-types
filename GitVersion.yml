@@ -15,5 +15,9 @@ branches:
   main:
     label: ''  # Переопределяем label для main, чтобы версии были без pre-release suffix
 
+  pull-request:
+    regex: ^(pull|pull\-requests|pr)[/-](?<Number>\d+)
+    label: pr-{Number}
+
 ignore:
   sha: []
